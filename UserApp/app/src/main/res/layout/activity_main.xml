@@ -10,25 +10,25 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp">
-    <TextView
-        android:id="@+id/loyaltyLevelTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Level: 0"
-        android:textSize="24sp"
-        android:layout_gravity="left"
-        android:gravity="left"
-        android:layout_weight="1"/>
+        <TextView
+            android:id="@+id/loyaltyLevelTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Level: 0"
+            android:textSize="24sp"
+            android:layout_gravity="left"
+            android:gravity="left"
+            android:layout_weight="1"/>
 
-    <TextView
-        android:id="@+id/saleAmountTextView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Current sale: 0%"
-        android:textSize="24sp"
-        android:layout_gravity="right"
-        android:gravity="right"
-        android:layout_weight="1"/>
+        <TextView
+            android:id="@+id/saleAmountTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Current sale: 0%"
+            android:textSize="24sp"
+            android:layout_gravity="right"
+            android:gravity="right"
+            android:layout_weight="1"/>
     </LinearLayout>
 
     <ImageView

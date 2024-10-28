@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "LoyalitySys"
+rootProject.name = "UserApp"
 include(":app")

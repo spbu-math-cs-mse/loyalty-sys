@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.loyalitysys"
+    namespace = "com.loyalitysys"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.loyalitysys"
+        applicationId = "com.loyalitysys"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
