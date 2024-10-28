@@ -1,5 +1,6 @@
 CXX = g++
-CXXFLAGS = -O2 -Wall -Wextra -std=c++20 -Iinclude
+
+CXXFLAGS = -O2 -Wall -Wextra -std=c++20 -c -Iinclude -I../common/..
 
 EXE = server
 SRCDIR = src
