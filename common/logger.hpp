@@ -43,8 +43,3 @@ public:
         return *this;
     }
 };
-
-#define DEBUG(x) LOG(DEBUG) << x
-#define INFO(x)  LOG(INFO)  << x
-#define WARN(x)  LOG(WARN)  << x
-#define ERROR(x) LOG(ERROR) << x
