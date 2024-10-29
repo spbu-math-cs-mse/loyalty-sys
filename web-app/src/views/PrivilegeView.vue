@@ -7,7 +7,7 @@ import Step from "primevue/step";
 import StepPanel from "primevue/steppanel";
 import Button from "primevue/button";
 
-import ViewSectionHeaderInfo from "../components/ViewSectionHeaderInfo.vue";
+import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 
 import { ref } from "vue";
 
@@ -32,7 +32,7 @@ const stepItems = ref([
 
 <template>
   <div class="privilege lg:py-4 py-1 md:pl-3 pl-0">
-    <ViewSectionHeaderInfo title="Привилегии" />
+    <SectionHeaderInfo title="Привилегии" />
 
     <div class="mt-2">
       <Stepper value="1">

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import Chart from "primevue/chart";
-import ViewSectionHeaderInfo from "@/components/ViewSectionHeaderInfo.vue";
+import SectionHeaderInfo from "@/components/SectionHeaderInfo.vue";
 import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 
 onMounted(() => {
@@ -170,7 +170,7 @@ const setChartOptions = () => {
 
 <template>
   <div class="about lg:py-4 py-1 md:pl-3 pl-0">
-    <ViewSectionHeaderInfo title="Статистика" />
+    <SectionHeaderInfo title="Статистика" />
 
     <div
       class="flex flex-wrap justify-content-around lg:justify-content-start gap-4"

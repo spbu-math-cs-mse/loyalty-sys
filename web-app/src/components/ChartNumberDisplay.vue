@@ -5,22 +5,24 @@ const props = defineProps({
   title: {
     type: String,
     default: "Title",
+    required: true,
   },
   number: {
     type: Number,
     default: 0,
+    required: true,
   },
   beforeIcon: {
     type: String,
-    default: false,
+    required: false,
   },
   afterIcon: {
     type: String,
-    default: false,
+    required: false,
   },
   money: {
     type: String,
-    default: false,
+    required: false,
   },
 });
 

@@ -34,12 +34,12 @@ const menuItems = ref([
     route: "/privilege",
     command: () => closeMenu(),
   },
-  {
-    label: "Скидки",
-    icon: "pi pi-percentage",
-    route: "/sales",
-    command: () => closeMenu(),
-  },
+  // {
+  //   label: "Скидки",
+  //   icon: "pi pi-percentage",
+  //   route: "/sales",
+  //   command: () => closeMenu(),
+  // },
 ]);
 
 const useBreakpoints = () => {
@@ -105,7 +105,7 @@ const { width, height } = useBreakpoints();
                   v-bind="props.action"
                   @click="navigate"
                 >
-                  <span :class="item.icon" style="font-size: 1.15rem" />
+                  <span class="text-xl" :class="item.icon" />
                   <span class="ml-2">{{ item.label }}</span>
                 </a>
               </router-link>
@@ -116,7 +116,7 @@ const { width, height } = useBreakpoints();
                 :target="item.target"
                 v-bind="props.action"
               >
-                <span :class="item.icon" style="font-size: 1.15rem" />
+                <span class="text-xl" :class="item.icon" />
                 <span class="ml-2">{{ item.label }}</span>
               </a>
             </template>
@@ -128,8 +128,8 @@ const { width, height } = useBreakpoints();
 
   <div class="container flex">
     <Menu
-      :model="menuItems"
       v-if="width >= menuExpandWidth"
+      :model="menuItems"
       class="aside overflow-scroll sticky top-0 p-2 top-0 animate-duration-500 shadow-1 border-none"
       :class="{ 'min-w-0': !desktopMenuFixed }"
     >
@@ -175,7 +175,7 @@ const { width, height } = useBreakpoints();
             :class="{ 'flex justify-content-center': !desktopMenuFixed }"
             class="py-2"
           >
-            <span :class="item.icon" style="font-size: 1.18rem" />
+            <span class="text-lg" :class="item.icon" />
             <span v-if="desktopMenuFixed" class="ml-2">{{ item.label }}</span>
           </a>
         </router-link>
@@ -186,7 +186,7 @@ const { width, height } = useBreakpoints();
           :target="item.target"
           v-bind="props.action"
         >
-          <span :class="item.icon" style="font-size: 1.15rem" />
+          <span class="text-lg" :class="item.icon" />
           <span class="ml-2">{{ item.label }}</span>
         </a>
       </template>

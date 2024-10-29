@@ -23,9 +23,15 @@ const routes = [
     component: () => import("../views/PrivilegeView.vue"),
   },
   {
+    path: "/404",
+    name: "notfound",
+    component: () => import("../views/PageNotFound.vue"),
+  },
+  {
     path: "/sales",
     name: "sales",
-    component: () => import("../views/SalesView.vue"),
+    redirect: { name: "notfound" },
+    // component: () => import("../views/SalesView.vue"),
   },
 ];
 

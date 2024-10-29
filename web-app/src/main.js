@@ -5,6 +5,7 @@ import router from "./router";
 import PrimeVue from "primevue/config";
 import Aura from "@primevue/themes/aura";
 import AnimateOnScroll from "primevue/animateonscroll";
+import ToastService from "primevue/toastservice";
 
 import Tooltip from "primevue/tooltip";
 
@@ -71,6 +72,7 @@ app
     },
   })
   .use(router)
+  .use(ToastService)
   .directive("animateonscroll", AnimateOnScroll)
   .directive("tooltip", Tooltip)
   .mount("#app");
