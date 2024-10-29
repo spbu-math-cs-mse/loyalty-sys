@@ -9,7 +9,7 @@ import com.example.loyalitysys.qrgenerator.QR
 import kotlin.jvm.optionals.getOrNull
 
 class MainActivity : ComponentActivity() {
-    private lateinit var loyaltyLevelTextView: TextView
+    private lateinit var loyalityLevelTextView: TextView
     private lateinit var saleAmountTextView: TextView
     private lateinit var qrCodeImageView: ImageView
 
@@ -19,11 +19,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        loyaltyLevelTextView = findViewById(R.id.loyaltyLevelTextView)
+        loyalityLevelTextView = findViewById(R.id.loyalityLevelTextView)
         saleAmountTextView = findViewById(R.id.saleAmountTextView)
         qrCodeImageView = findViewById(R.id.qrCodeImageView)
 
-        NetworkHandler(loyaltyLevelTextView, saleAmountTextView, baseUrl, true)
+        NetworkHandler(loyalityLevelTextView, saleAmountTextView, baseUrl, true)
         qrCodeImageView.setImageBitmap(QR().getQR("User1589").getOrNull())
     }
 }

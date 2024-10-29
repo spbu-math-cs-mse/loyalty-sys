@@ -19,7 +19,7 @@ class NetworkHandler(val levelTextView: TextView, val saleTextView: TextView, ur
 
     private fun updateViews(level: Int, sale: Int) =
         GlobalScope.launch(Dispatchers.Main.immediate) {
-            levelTextView.text = "Loyalty Level: ${level}"
+            levelTextView.text = "Loyality Level: ${level}"
             saleTextView.text = "Sale: ${sale}%"
         }
 

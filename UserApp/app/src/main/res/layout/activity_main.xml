@@ -11,7 +11,7 @@
         android:orientation="horizontal"
         android:padding="16dp">
         <TextView
-            android:id="@+id/loyaltyLevelTextView"
+            android:id="@+id/loyalityLevelTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Level: 0"
