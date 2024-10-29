@@ -24,6 +24,6 @@ class MainActivity : ComponentActivity() {
         qrCodeImageView = findViewById(R.id.qrCodeImageView)
 
         NetworkHandler(loyalityLevelTextView, saleAmountTextView, baseUrl, true)
-        qrCodeImageView.setImageBitmap(QR().getQR("User1589").getOrNull())
+        qrCodeImageView.setImageBitmap(QR().getQR("DefaultUserID").getOrNull())
     }
 }
