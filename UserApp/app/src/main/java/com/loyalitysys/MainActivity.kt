@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         saleAmountTextView = findViewById(R.id.saleAmountTextView)
         qrCodeImageView = findViewById(R.id.qrCodeImageView)
 
-        NetworkHandler(loyalityLevelTextView, saleAmountTextView, baseUrl, true)
+        NetworkHandler(loyalityLevelTextView, saleAmountTextView)
         qrCodeImageView.setImageBitmap(QR().getQR().getOrNull())
     }
 }

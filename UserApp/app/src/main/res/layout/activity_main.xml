@@ -14,7 +14,7 @@
             android:id="@+id/loyalityLevelTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Level: 0"
+            android:text="Level: 1"
             android:textSize="24sp"
             android:layout_gravity="left"
             android:gravity="left"
