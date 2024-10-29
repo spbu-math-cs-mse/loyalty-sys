@@ -12,39 +12,41 @@
 using json = nlohmann::json;
 
 struct RandomGenerator {
-  static constexpr double kMinUserId = 1000;
-  static constexpr double kMaxUserId = 9999;
-  static constexpr int kMinProductCount = 1;
-  static constexpr int kMaxProductCount = 10;
-  static constexpr double kMinPriceRub = 10.0;
-  static constexpr double kMaxPriceRub = 100.0;
+  static constexpr uint64_t kMinUserId = 1000;
+  static constexpr uint64_t kMaxUserId = 9999;
+  static constexpr uint32_t kMinProductCount = 1;
+  static constexpr uint32_t kMaxProductCount = 10;
+  static constexpr uint64_t kMinPriceKopeck = 10'00;
+  static constexpr uint64_t kMaxPriceKopeck = 1000'00;
 
   std::random_device rd;
   std::mt19937 gen;
   std::uniform_int_distribution<> user_id_dist;
   std::uniform_int_distribution<> product_count_dist;
-  std::uniform_real_distribution<> price_rub_dist;
+  std::uniform_int_distribution<> price_kopeck_dist;
 
   RandomGenerator()
       : gen(rd()), user_id_dist(kMinUserId, kMaxUserId),
         product_count_dist(kMinProductCount, kMaxProductCount),
-        price_rub_dist(kMinPriceRub, kMaxPriceRub) {}
+        price_kopeck_dist(kMinPriceKopeck, kMaxPriceKopeck) {}
 
-  int get_random_user_id() { return user_id_dist(gen); }
+  std::string get_random_user_id() {
+    return "User" + std::to_string(user_id_dist(gen));
+  }
 
-  int get_random_product_count() { return product_count_dist(gen); }
+  uint32_t get_random_product_count() { return product_count_dist(gen); }
 
-  double get_random_product_price_rub() { return price_rub_dist(gen); }
+  uint64_t get_random_product_price_kopeck() { return price_kopeck_dist(gen); }
 };
 
 struct Product {
   std::string name;
-  double price_rub;
+  uint64_t price_kopeck;
 };
 
 void purchase(const httplib::Request &req, httplib::Response &res) {
   RandomGenerator generator;
-  std::optional<int> user_id;
+  std::optional<std::string> user_id;
   std::vector<Product> products;
 
   try {
@@ -67,14 +69,16 @@ void purchase(const httplib::Request &req, httplib::Response &res) {
             throw std::runtime_error("wrong json format for product");
           }
 
-          const std::string &price_rub = product["price"];
-          products.push_back({product["name"], std::stod(price_rub)});
+          const std::string &price_kopek = product["price"];
+          products.push_back(
+              {.name = product["name"],
+               .price_kopeck = static_cast<uint64_t>(std::stoll(price_kopek))});
         }
       }
     }
   } catch (const std::exception &e) {
-    LOG(ERROR) << "Error while JSON. Error = " << e.what() << "; json = {"
-               << req.body << "}";
+    LOG(ERROR) << "Error while JSON. Error = " << e.what()
+               << "; json = " << req.body;
   }
 
   if (!user_id.has_value()) {
@@ -82,12 +86,12 @@ void purchase(const httplib::Request &req, httplib::Response &res) {
   }
 
   if (products.empty()) {
-    int product_count = generator.get_random_product_count();
+    const auto product_count = generator.get_random_product_count();
     products.reserve(product_count);
 
-    for (int i = 1; i <= product_count; ++i) {
-      products.push_back({std::string("Product ") + std::to_string(i),
-                          generator.get_random_product_price_rub()});
+    for (size_t product_id = 1; product_id <= product_count; ++product_id) {
+      products.push_back({std::string("Product ") + std::to_string(product_id),
+                          generator.get_random_product_price_kopeck()});
     }
   }
 
@@ -95,14 +99,14 @@ void purchase(const httplib::Request &req, httplib::Response &res) {
   LOG(DEBUG) << "Products = {";
 
   for (const auto &product : products) {
-    LOG(DEBUG) << "    " << product.name << ": " << product.price_rub;
+    LOG(DEBUG) << "    " << product.name << ": " << product.price_kopeck;
   }
 
   LOG(DEBUG) << "}";
 
-  double total_cost = 0;
+  uint64_t total_cost = 0;
   for (const auto &product : products) {
-    total_cost += product.price_rub;
+    total_cost += product.price_kopeck;
   }
 
   json response_json;
