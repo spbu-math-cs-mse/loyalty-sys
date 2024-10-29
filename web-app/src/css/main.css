@@ -1,0 +1,68 @@
+@import url("stylesheet.css");
+
+body{
+    margin: 0;
+    padding: 0;
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+ul,
+ol {
+    margin: 0;
+    padding: 0;
+}
+
+a {
+    text-decoration: none;
+}
+
+body{
+    background-color: var(--p-surface-50);
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 0
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgb(0, 0, 0);
+    border-radius: 8px
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.533)
+}
+
+::-webkit-scrollbar-track {
+    background: 0 0;
+    margin-right: 50px;
+} 
+
+.aside{
+    height: 100dvh;
+}
+
+.aside__visible{
+    background: red;
+}
+
+.toggle__switch{
+    transform: scale(0.85);
+}
+
+.logo{
+    max-width: 40px;
+    width: 100%;
+    margin: 0 auto;
+}
