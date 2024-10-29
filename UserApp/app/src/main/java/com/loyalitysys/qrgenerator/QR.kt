@@ -8,6 +8,8 @@ import com.journeyapps.barcodescanner.BarcodeEncoder
 import java.util.Optional
 
 class QR {
+    private val DefaultUserID = "User0"
+
     private fun generateQRCode(userID: String): Optional<Bitmap> {
         val barcodeEncoder = BarcodeEncoder()
         try {
@@ -20,7 +22,7 @@ class QR {
         return Optional.empty()
     }
 
-    public fun getQR(userID: String): Optional<Bitmap> {
+    public fun getQR(userID: String = DefaultUserID): Optional<Bitmap> {
         return generateQRCode(userID)
     }
 }
