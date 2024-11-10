@@ -5,11 +5,11 @@
 POST /user - Создание нового пользователя
 
 * Параметры:
-    * username (обязательный): имя пользователя.
+    * chat_id (обязательный): идентификатор телеграм чата пользователя с ботом.
 * Тело запроса: 
 ```json
 { 
-    "username": "JohnDoe" 
+  "chat_id": "1234567890" 
 }
 ```
 * Пример ответа:
@@ -69,8 +69,8 @@ GET /data/values
 
 * Параметры:
     * product_id (обязательный): идентификатор продукта.
-    * start_date (обязательный): начальная дата в формате "YYYY-MM".
-    * end_date (обязательный): конечная дата в формате "YYYY-MM".
+    * start_date (необязательный): начальная дата в формате "YYYY-MM".
+    * end_date (необязательный): конечная дата в формате "YYYY-MM".
 * Пример запроса:
 ```
     GET /data/values?product_id=1&start_date=2023-10&end_date=2023-12
@@ -92,8 +92,8 @@ GET /data/values
 GET /data/total_purchases
 
 * Параметры:
-    * start_date (обязательный): начальная дата в формате "YYYY-MM".
-    * end_date (обязательный): конечная дата в формате "YYYY-MM".
+    * start_date (необязательный): начальная дата в формате "YYYY-MM".
+    * end_date (необязательный): конечная дата в формате "YYYY-MM".
 * Пример запроса:
 ```
     GET /data/total_purchases?start_date=2023-10&end_date=2023-12
@@ -110,8 +110,8 @@ GET /data/total_purchases
 GET /data/average_check
 
 * Параметры:
-    * start_date (обязательный): начальная дата в формате "YYYY-MM".
-    * end_date (обязательный): конечная дата в формате "YYYY-MM".
+    * start_date (необязательный): начальная дата в формате "YYYY-MM".
+    * end_date (необязательный): конечная дата в формате "YYYY-MM".
 * Пример запроса:
 ```
     GET /data/average_check?start_date=2023-10&end_date=2023-12
@@ -128,8 +128,8 @@ GET /data/average_check
 GET /data/visitor_count
 
 * Параметры:
-    * start_date (обязательный): начальная дата в формате "YYYY-MM".
-    * end_date (обязательный): конечная дата в формате "YYYY-MM".
+    * start_date (необязательный): начальная дата в формате "YYYY-MM".
+    * end_date (необязательный): конечная дата в формате "YYYY-MM".
 * Пример запроса:
 ```
     GET /data/visitor_count?start_date=2023-10&end_date=2023-12

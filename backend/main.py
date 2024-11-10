@@ -1,3 +1,4 @@
+import argparse
 from datetime import datetime
 from flask import Flask, request, jsonify
 import hashlib
@@ -5,12 +6,12 @@ from message import Message
 
 app = Flask(__name__)
 
-
-def generate_user_id(username: str) -> str:
-    return hashlib.sha256(username.encode()).hexdigest()
-
+def generate_user_id(chat_id: str) -> str:
+    return hashlib.sha256(chat_id.encode()).hexdigest()
 
 def validate_date(date_str: str) -> True:
+    if date_str is None:
+        return True
     date_format = "%Y-%m"
     try:
         datetime.strptime(date_str, date_format)
@@ -22,13 +23,13 @@ def validate_date(date_str: str) -> True:
 @app.route('/user', methods=['POST'])
 def create_user():
     data = request.json
-    username = data.get('username')
+    chat_id = data.get('chat_id')
 
-    if not username:
-        return jsonify({"message": Message.USERNAME_REQUIRED.value}), 400
+    if not chat_id:
+        return jsonify({"message": Message.CHAT_ID_REQUIRED.value}), 400
     
     # TODO for @vsdmitri: here should be some logic for creating user in db, remove the stub after implementation
-    user_id = generate_user_id(username)
+    user_id = generate_user_id(chat_id)
     
     return jsonify({"message": Message.USER_CREATED.value, "user_id": user_id}), 201
 
@@ -65,6 +66,9 @@ def get_product_values():
     product_id = request.args.get('product_id', type=int)
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date') 
+
+    if product_id is None:
+        return jsonify({"message": Message.PRODUCT_ID_REQUIRED.value}), 400
 
     if not validate_date(start_date) or not validate_date(end_date):
         return jsonify({"message": Message.INVALID_DATE_FORMAT.value}), 400
@@ -116,4 +120,10 @@ def get_products():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--host', default='0.0.0.0')
+    parser.add_argument('--debug', action='store_true')
+
+    args = parser.parse_args()
+
+    app.run(host=args.host, debug=args.debug)

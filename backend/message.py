@@ -6,4 +6,5 @@ class Message(Enum):
     INVALID_DATE_FORMAT = "Invalid date format. Use %Y-%m."
     NO_PURCHASES_PROVIDED = "No purchases provided"
     INVALID_PURCHASE_DATA = "Invalid purchase data"
-    USERNAME_REQUIRED = "Username is required"
+    CHAT_ID_REQUIRED = "Chat id is required"
+    PRODUCT_ID_REQUIRED = "Product id is required"
