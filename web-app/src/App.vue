@@ -2,6 +2,7 @@
 import Menu from "primevue/menu";
 import Button from "primevue/button";
 import Drawer from "primevue/drawer";
+import Toast from "primevue/toast";
 import ToggleSwitch from "primevue/toggleswitch";
 
 import { computed, onMounted, onUnmounted, ref } from "vue";
@@ -22,12 +23,12 @@ const menuItems = ref([
     route: "/stats",
     command: () => closeMenu(),
   },
-  {
-    label: "Купоны",
-    icon: "pi pi-tag",
-    route: "/coupons",
-    command: () => closeMenu(),
-  },
+  // {
+  //   label: "Купоны",
+  //   icon: "pi pi-tag",
+  //   route: "/coupons",
+  //   command: () => closeMenu(),
+  // },
   {
     label: "Привилегии",
     icon: "pi pi-user-plus",
@@ -64,6 +65,8 @@ const { width, height } = useBreakpoints();
 </script>
 
 <template>
+  <Toast />
+
   <div v-if="width < menuExpandWidth" class="container">
     <header
       class="header p-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
@@ -131,7 +134,7 @@ const { width, height } = useBreakpoints();
       v-if="width >= menuExpandWidth"
       :model="menuItems"
       class="aside overflow-scroll sticky top-0 p-2 top-0 animate-duration-500 shadow-1 border-none"
-      :class="{ 'min-w-0': !desktopMenuFixed }"
+      :class="{ 'min-w-min': !desktopMenuFixed }"
     >
       <template #start>
         <div

@@ -36,8 +36,14 @@ const stepItems = ref([
 
     <div class="mt-2">
       <Stepper value="1">
-        <StepItem v-for="(step, index) in stepItems" :value="`${++index}`">
-          <Step>{{ step.label }}</Step>
+        <StepItem
+          v-for="(step, index) in stepItems"
+          :value="`${++index}`"
+          :key="index"
+        >
+          <Step>
+            <h5 class="text-sm font-normal">{{ step.label }}</h5>
+          </Step>
           <StepPanel v-slot="{ activateCallback }" class="border-round-lg">
             <div class="flex flex-col">
               <div
@@ -51,13 +57,13 @@ const stepItems = ref([
                 v-if="index > 1"
                 severity="secondary"
                 class="mr-2 text-sm"
-                label="Back"
+                label="Назад"
                 @click="activateCallback(`${index - 1}`)"
               />
               <Button
                 v-if="index < stepItems.length"
                 class="text-sm"
-                label="Next"
+                label="Вперед"
                 @click="activateCallback(`${index + 1}`)"
               />
             </div>
