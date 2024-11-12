@@ -66,7 +66,6 @@ const { width, height } = useBreakpoints();
 
 <template>
   <Toast />
-
   <div v-if="width < menuExpandWidth" class="container">
     <header
       class="header p-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
