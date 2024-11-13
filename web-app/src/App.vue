@@ -16,7 +16,7 @@ const closeMenu = () => {
   mobileMenuFixed.value = false;
 };
 
-// Allowed comments, will be needed
+
 const menuItems = ref([
   {
     label: "Статистика",
@@ -24,18 +24,19 @@ const menuItems = ref([
     route: "/stats",
     command: () => closeMenu(),
   },
-  // {
-  //   label: "Купоны",
-  //   icon: "pi pi-tag",
-  //   route: "/coupons",
-  //   command: () => closeMenu(),
-  // },
   {
     label: "Привилегии",
     icon: "pi pi-user-plus",
     route: "/privilege",
     command: () => closeMenu(),
   },
+  // Allowed comments, will be needed later
+  // {
+  //   label: "Купоны",
+  //   icon: "pi pi-tag",
+  //   route: "/coupons",
+  //   command: () => closeMenu(),
+  // },
   // {
   //   label: "Скидки",
   //   icon: "pi pi-percentage",

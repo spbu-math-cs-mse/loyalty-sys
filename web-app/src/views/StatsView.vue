@@ -42,10 +42,6 @@ const getColorsForCharts = (count = 0, power = 500) => {
   return defaultColors.slice(0, count).map((x) => $dt(x).value);
 };
 
-onMounted(() => {
-  // ProductService.getProducts().then((data) => (productList.value = data));
-});
-
 /* 
   TODO: empty data after adding backend interaction
 */
@@ -160,6 +156,9 @@ onMounted(() => {
 
   chartLineOptions.value = setChartOptionsLine();
   chartLineConfig.value = setChartConfigDoughnut();
+
+  // Example of collecting data
+  // ProductService.getProducts().then((data) => (productList.value = data));
 });
 
 const chartData = ref();
