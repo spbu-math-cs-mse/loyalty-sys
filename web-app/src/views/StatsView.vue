@@ -14,23 +14,6 @@ import AutoComplete from "primevue/autocomplete";
 
 const primevue = usePrimeVue();
 
-// function getChartColors(x, power = 500) {
-//   const defaultColors = [
-//     `emerald.${power}`, `green.${power}`, `lime.${power}`, `red.${power}`, `orange.${power}`, `amber.${power}`, `yellow.${power}`, `teal.${power}`, `cyan.${power}`, `blue.${power}`, `indigo.${power}`,  `violet.${power}`,
-//     `purple.${power}`, `fuchsia.${power}`, `pink.${power}`, `rose.${power}`, `slate.${power}`, `gray.${power}`, `zinc.${power}`, `neutral.${power}`, `stone.${power}`
-//   ];
-//   const colors  = x || defaultColors;
-
-//   let currentColor = 0;
-
-//   return function () {
-//     currentColor = (currentColor + 1) % colors.length;
-//     return $dt(colors[currentColor]).value;
-//   };
-// }
-
-// const getNextChartLineColors = getChartColors();
-
 const getColorsForCharts = (count = 0, power = 500) => {
   const defaultColors = [
     `emerald.${power}`,
@@ -62,6 +45,10 @@ const getColorsForCharts = (count = 0, power = 500) => {
 onMounted(() => {
   // ProductService.getProducts().then((data) => (productList.value = data));
 });
+
+/* 
+  TODO: empty data after adding backend interaction
+*/
 
 const productList = ref([
   {
@@ -173,8 +160,6 @@ onMounted(() => {
 
   chartLineOptions.value = setChartOptionsLine();
   chartLineConfig.value = setChartConfigDoughnut();
-
-  // setChartLineData();
 });
 
 const chartData = ref();
@@ -201,6 +186,9 @@ const setChartConfigDoughnut = () => {
   };
 };
 
+/* 
+  TODO: delete switch construction and flag definition after adding backend interaction
+*/
 const setChartDoughnutData = () => {
   const colors = [
     $dt("cyan.500").value,
@@ -258,6 +246,11 @@ const setChartDoughnutData = () => {
 
   return chartData.value;
 };
+
+/* 
+  TODO: empty data after adding backend interaction
+        use loop for adding data to dataset (change labels, data and colors)
+*/
 
 const setChartLineData = () => {
   const monthsInRange = getMonthsInRange(

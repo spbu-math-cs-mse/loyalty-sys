@@ -113,6 +113,11 @@ app
       firstDayOfWeek: 1,
       dateFormat: "dd.mm.yy",
       clear: "Очистить",
+      editTitle: "Изменить",
+      addTitle: "Добавить",
+      deleteTitle: "Удалить",
+      cancelTitle: "Отмена",
+      deleteSelected: "Удалить все выбранное",
       today: "Сегодня",
       startsWith: "Начинается с",
       contains: "Содержит",
@@ -218,6 +223,32 @@ app
         zoomOut: "Уменьшить",
         rotateRight: "Повернуть вправо",
         rotateLeft: "Повернуть влево",
+      },
+      toast: {
+        severity: {
+          success: "success", 
+          info: "info", 
+          warn: "warn", 
+          error: "error"
+        },
+        summary: {
+          success: "Успешно",
+          successTitle: "Выполнено",
+          info: "Информация",
+          warn: "Предупреждение",
+          error: "Ошибка"
+        },
+        detail: {
+          coupons: {
+            delete: "Купоны удалены",
+            update: "Купоны обновлены",
+          },
+          coupon: {
+            add: "Купон добавлен",
+            edit: "Купон изменен",
+            delete: "Купон удален",
+          }
+        }
       },
     },
   })

@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { FilterMatchMode } from "@primevue/core/api";
 import { useToast } from "primevue/usetoast";
+import { usePrimeVue } from "primevue/config";
 
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 import DataTable from "primevue/datatable";
@@ -23,6 +24,10 @@ onMounted(() => {
   // ProductService.getProducts().then((data) => (products.value = data));
 });
 
+const primevue = usePrimeVue();
+const languageConfig = primevue.config.locale;
+const toastConfig = languageConfig.toast
+
 const toast = useToast();
 const dt = ref();
 const products = ref();
@@ -30,7 +35,7 @@ const productDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
 const product = ref({});
-const productDialogText = ref("Добавить");
+const productDialogText = ref();
 const selectedProducts = ref();
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
@@ -60,7 +65,7 @@ const dialogDurationDay = ref([
 ]);
 
 const openNew = () => {
-  productDialogText.value = "Добавить";
+  productDialogText.value = languageConfig.addTitle;
   product.value = {};
   submitted.value = false;
   productDialog.value = true;
@@ -79,9 +84,9 @@ const saveProduct = () => {
         : product.value.inventoryStatus;
       products.value[findIndexById(product.value.id)] = product.value;
       toast.add({
-        severity: "success",
-        summary: "Выполнено",
-        detail: "Купон изменен",
+        severity: toastConfig.severity.success,
+        summary: toastConfig.summary.successTitle,
+        detail: toastConfig.detail.coupon.edit,
         life: 3000,
       });
     } else {
@@ -91,9 +96,9 @@ const saveProduct = () => {
         : "INSTOCK";
       products.value.push(product.value);
       toast.add({
-        severity: "success",
-        summary: "Успешно",
-        detail: "Купон добален",
+        severity: toastConfig.severity.success,
+        summary: toastConfig.summary.success,
+        detail: toastConfig.detail.coupon.add,
         life: 3000,
       });
     }
@@ -103,7 +108,7 @@ const saveProduct = () => {
   }
 };
 const editProduct = (prod) => {
-  productDialogText.value = "Изменить";
+  productDialogText.value = languageConfig.editTitle;
   product.value = { ...prod };
   productDialog.value = true;
 };
@@ -116,9 +121,9 @@ const deleteProduct = () => {
   deleteProductDialog.value = false;
   product.value = {};
   toast.add({
-    severity: "success",
-    summary: "Успешно",
-    detail: "Купон удалён",
+    severity: toastConfig.severity.success,
+    summary: toastConfig.summary.success,
+    detail: toastConfig.detail.coupon.delete,
     life: 3000,
   });
 };
@@ -145,6 +150,7 @@ const createId = () => {
 const confirmDeleteSelected = () => {
   deleteProductsDialog.value = true;
 };
+
 const deleteSelectedProducts = () => {
   products.value = products.value.filter(
     (val) => !selectedProducts.value.includes(val)
@@ -152,9 +158,9 @@ const deleteSelectedProducts = () => {
   deleteProductsDialog.value = false;
   selectedProducts.value = null;
   toast.add({
-    severity: "success",
-    summary: "Выполнено",
-    detail: "Купоны удалёны",
+    severity: toastConfig.severity.success,
+    summary: toastConfig.summary.successTitle,
+    detail: toastConfig.detail.coupons.delete,
     life: 3000,
   });
 };
@@ -211,13 +217,13 @@ products.value = [
       <Toolbar class="mb-6">
         <template #start>
           <Button
-            label="Добавить"
+            :label="languageConfig.addTitle"
             icon="pi pi-plus"
             class="mr-2"
             @click="openNew"
           />
           <Button
-            label="Удалить"
+            :label="languageConfig.deleteTitle"
             icon="pi pi-trash"
             severity="danger"
             outlined
@@ -361,7 +367,7 @@ products.value = [
       </div>
 
       <template #footer>
-        <Button label="Отмена" icon="pi pi-times" text @click="hideDialog" />
+        <Button :label="languageConfig.cancelTitle" icon="pi pi-times" text @click="hideDialog" />
         <Button
           :label="productDialogText"
           icon="pi pi-check"
@@ -373,7 +379,7 @@ products.value = [
     <Dialog
       v-model:visible="deleteProductDialog"
       :style="{ width: '450px' }"
-      header="Удалить"
+      :header="languageConfig.deleteTitle"
       :modal="true"
     >
       <div class="flex items-center gap-4">
@@ -385,19 +391,19 @@ products.value = [
       </div>
       <template #footer>
         <Button
-          label="Нет"
+          :label="languageConfig.reject"
           icon="pi pi-times"
           text
           @click="deleteProductDialog = false"
         />
-        <Button label="Да" icon="pi pi-check" @click="deleteProduct" />
+        <Button :label="languageConfig.accept" icon="pi pi-check" @click="deleteProduct" />
       </template>
     </Dialog>
 
     <Dialog
       v-model:visible="deleteProductsDialog"
       :style="{ width: '450px' }"
-      header="Удалить все выбранное"
+      :header="languageConfig.deleteSelected"
       :modal="true"
     >
       <div class="flex items-center gap-4">
@@ -408,13 +414,13 @@ products.value = [
       </div>
       <template #footer>
         <Button
-          label="Нет"
+          :label="languageConfig.reject"
           icon="pi pi-times"
           text
           @click="deleteProductsDialog = false"
         />
         <Button
-          label="Да"
+          :label="languageConfig.accept"
           icon="pi pi-check"
           text
           @click="deleteSelectedProducts"
