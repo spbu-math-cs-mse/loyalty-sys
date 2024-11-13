@@ -16,6 +16,7 @@ const closeMenu = () => {
   mobileMenuFixed.value = false;
 };
 
+// Allowed comments, will be needed
 const menuItems = ref([
   {
     label: "Статистика",
