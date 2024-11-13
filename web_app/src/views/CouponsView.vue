@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { FilterMatchMode } from "@primevue/core/api";
 import { useToast } from "primevue/usetoast";
+import { usePrimeVue } from "primevue/config";
 
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 import DataTable from "primevue/datatable";
@@ -11,37 +12,35 @@ import InputIcon from "primevue/inputicon";
 import InputText from "primevue/inputtext";
 import Textarea from "primevue/textarea";
 import RadioButton from "primevue/radiobutton";
+import Checkbox from "primevue/checkbox";
 import InputNumber from "primevue/inputnumber";
 import Select from "primevue/select";
 import Column from "primevue/column";
 import Tag from "primevue/tag";
 import Dialog from "primevue/dialog";
 import Button from "primevue/button";
-import Toast from "primevue/toast";
 
 onMounted(() => {
   // ProductService.getProducts().then((data) => (products.value = data));
 });
 
+const primevue = usePrimeVue();
+const languageConfig = primevue.config.locale;
+const toastConfig = languageConfig.toast
+
 const toast = useToast();
 const dt = ref();
-const selectedDay = ref();
-const dialogpercentSale = ref(0);
 const products = ref();
 const productDialog = ref(false);
 const deleteProductDialog = ref(false);
 const deleteProductsDialog = ref(false);
 const product = ref({});
+const productDialogText = ref();
 const selectedProducts = ref();
 const filters = ref({
   global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const submitted = ref(false);
-const statuses = ref([
-  { label: "INSTOCK", value: "instock" },
-  { label: "LOWSTOCK", value: "lowstock" },
-  { label: "OUTOFSTOCK", value: "outofstock" },
-]);
 const dialogDurationDay = ref([
   {
     label: "1 день",
@@ -66,6 +65,7 @@ const dialogDurationDay = ref([
 ]);
 
 const openNew = () => {
+  productDialogText.value = languageConfig.addTitle;
   product.value = {};
   submitted.value = false;
   productDialog.value = true;
@@ -77,30 +77,28 @@ const hideDialog = () => {
 const saveProduct = () => {
   submitted.value = true;
 
-  if (product?.value.name?.trim()) {
+  if (product?.value.code?.trim()) {
     if (product.value.id) {
       product.value.inventoryStatus = product.value.inventoryStatus.value
         ? product.value.inventoryStatus.value
         : product.value.inventoryStatus;
       products.value[findIndexById(product.value.id)] = product.value;
       toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "Product Updated",
+        severity: toastConfig.severity.success,
+        summary: toastConfig.summary.successTitle,
+        detail: toastConfig.detail.coupon.edit,
         life: 3000,
       });
     } else {
       product.value.id = createId();
-      product.value.code = createId();
-      product.value.image = "product-placeholder.svg";
       product.value.inventoryStatus = product.value.inventoryStatus
         ? product.value.inventoryStatus.value
         : "INSTOCK";
       products.value.push(product.value);
       toast.add({
-        severity: "success",
-        summary: "Successful",
-        detail: "Product Created",
+        severity: toastConfig.severity.success,
+        summary: toastConfig.summary.success,
+        detail: toastConfig.detail.coupon.add,
         life: 3000,
       });
     }
@@ -110,6 +108,7 @@ const saveProduct = () => {
   }
 };
 const editProduct = (prod) => {
+  productDialogText.value = languageConfig.editTitle;
   product.value = { ...prod };
   productDialog.value = true;
 };
@@ -122,9 +121,9 @@ const deleteProduct = () => {
   deleteProductDialog.value = false;
   product.value = {};
   toast.add({
-    severity: "success",
-    summary: "Successful",
-    detail: "Product Deleted",
+    severity: toastConfig.severity.success,
+    summary: toastConfig.summary.success,
+    detail: toastConfig.detail.coupon.delete,
     life: 3000,
   });
 };
@@ -151,6 +150,7 @@ const createId = () => {
 const confirmDeleteSelected = () => {
   deleteProductsDialog.value = true;
 };
+
 const deleteSelectedProducts = () => {
   products.value = products.value.filter(
     (val) => !selectedProducts.value.includes(val)
@@ -158,9 +158,9 @@ const deleteSelectedProducts = () => {
   deleteProductsDialog.value = false;
   selectedProducts.value = null;
   toast.add({
-    severity: "success",
-    summary: "Successful",
-    detail: "Products Deleted",
+    severity: toastConfig.severity.success,
+    summary: toastConfig.summary.successTitle,
+    detail: toastConfig.detail.coupons.delete,
     life: 3000,
   });
 };
@@ -185,47 +185,45 @@ products.value = [
   {
     id: "1000",
     code: "f230fh0g3",
+    sale: 65,
+    dayDuration: {
+      label: "1 день",
+      value: 1,
+    },
     name: "Bamboo Watch",
     description: "Product Description",
-    image: "bamboo-watch.jpg",
-    sale: 65,
-    category: "Accessories",
-    dayDuration: "45 дней",
     inventoryStatus: "INSTOCK",
-    rating: 5,
   },
   {
     id: "1001",
     code: "f2304h0g3",
-    name: "Bamboo Watch",
-    description: "Product Description",
-    image: "bamboo-watch.jpg",
     sale: 10,
-    category: "Accessories",
-    dayDuration: "1 день",
-    inventoryStatus: "INSTOCK",
-    rating: 5,
+    dayDuration: {
+      label: "3 дня",
+      value: 3,
+    },
+    name: "Bamboo Watch2",
+    description: "Product Description",
+    inventoryStatus: "LOWSTOCK",
   },
 ];
 </script>
 
 <template>
-  <Toast />
-
   <div class="coupons lg:py-4 py-1 md:pl-3 pl-0">
     <SectionHeaderInfo title="Купоны" />
 
-    <div class="">
+    <div class="w-full">
       <Toolbar class="mb-6">
         <template #start>
           <Button
-            label="Добавить"
+            :label="languageConfig.addTitle"
             icon="pi pi-plus"
             class="mr-2"
             @click="openNew"
           />
           <Button
-            label="Удалить"
+            :label="languageConfig.deleteTitle"
             icon="pi pi-trash"
             severity="danger"
             outlined
@@ -240,12 +238,13 @@ products.value = [
         :selection="selectedProducts"
         :value="products"
         dataKey="id"
+        removableSort
         :paginator="true"
         :rows="10"
         :filters="filters"
         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
         :rowsPerPageOptions="[5, 10, 25]"
-        currentPageReportTemplate="Показано {first} из {last} of {totalRecords} products"
+        currentPageReportTemplate="с {first} по {last} из {totalRecords} купонов"
       >
         <template #header>
           <div class="flex flex-wrap gap-2 items-center justify-between">
@@ -273,7 +272,7 @@ products.value = [
           style="min-width: 12rem"
         ></Column>
         <Column
-          field="dayDuration"
+          field="dayDuration.label"
           header="Срок"
           sortable
           style="min-width: 16rem"
@@ -320,32 +319,32 @@ products.value = [
 
     <Dialog
       v-model:visible="productDialog"
-      header="Добавить купон"
+      :header="productDialogText"
       :modal="true"
     >
       <div class="flex flex-col gap-6">
-        <div class="col-span-6">
-          <label for="name" class="block font-bold mb-3">Купон</label>
+        <div class="col-span-6 max-w-14rem">
+          <label for="code" class="block font-bold mb-3">Купон</label>
           <InputText
-            id="name"
-            v-model.trim="product.name"
+            id="code"
+            v-model.trim="product.code"
             required="true"
             autofocus
-            :invalid="submitted && !product.name"
+            :invalid="submitted && !product.code"
             fluid
           />
-          <small v-if="submitted && !product.name" class="text-red-500"
+          <small v-if="submitted && !product.code" class="text-red-500"
             >Это обязательное поле.</small
           >
         </div>
         <div class="col-span-6">
-          <label for="percentSale" class="block font-bold mb-3"
+          <label for="dialogpercentSale" class="block font-bold mb-3"
             >Процент скидки</label
           >
           <InputNumber
-            id="percentSale"
-            v-model="dialogpercentSale"
-            inputId="minmax-buttons"
+            id="dialogpercentSale"
+            v-model="product.sale"
+            inputId="percentSale"
             mode="decimal"
             showButtons
             :min="0"
@@ -357,50 +356,54 @@ products.value = [
           <label for="dayDuration" class="block font-bold mb-3">Срок</label>
           <Select
             id="dayDuration"
-            v-model="selectedDay"
+            v-model="product.dayDuration"
             showClear
             optionLabel="label"
             :options="dialogDurationDay"
-            placeholder="1 день"
-            class="w-full md:w-56"
+            placeholder="&nbsp;"
+            class="w-10rem h-100"
           />
         </div>
       </div>
 
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" text @click="hideDialog" />
-        <Button label="Save" icon="pi pi-check" @click="saveProduct" />
+        <Button :label="languageConfig.cancelTitle" icon="pi pi-times" text @click="hideDialog" />
+        <Button
+          :label="productDialogText"
+          icon="pi pi-check"
+          @click="saveProduct"
+        />
       </template>
     </Dialog>
 
     <Dialog
       v-model:visible="deleteProductDialog"
       :style="{ width: '450px' }"
-      header="Confirm"
+      :header="languageConfig.deleteTitle"
       :modal="true"
     >
       <div class="flex items-center gap-4">
         <i class="pi pi-exclamation-triangle !text-3xl" />
         <span v-if="product"
-          >Уверены, что хотите удалить <b>{{ product.name }}</b
+          >Уверены, что хотите удалить <b>{{ product.code }}</b
           >?</span
         >
       </div>
       <template #footer>
         <Button
-          label="No"
+          :label="languageConfig.reject"
           icon="pi pi-times"
           text
           @click="deleteProductDialog = false"
         />
-        <Button label="Yes" icon="pi pi-check" @click="deleteProduct" />
+        <Button :label="languageConfig.accept" icon="pi pi-check" @click="deleteProduct" />
       </template>
     </Dialog>
 
     <Dialog
       v-model:visible="deleteProductsDialog"
       :style="{ width: '450px' }"
-      header="Confirm"
+      :header="languageConfig.deleteSelected"
       :modal="true"
     >
       <div class="flex items-center gap-4">
@@ -411,13 +414,13 @@ products.value = [
       </div>
       <template #footer>
         <Button
-          label="No"
+          :label="languageConfig.reject"
           icon="pi pi-times"
           text
           @click="deleteProductsDialog = false"
         />
         <Button
-          label="Yes"
+          :label="languageConfig.accept"
           icon="pi pi-check"
           text
           @click="deleteSelectedProducts"
