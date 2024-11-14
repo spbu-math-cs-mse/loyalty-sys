@@ -7,6 +7,7 @@ class Message(Enum):
     PURCHASES_RECORDED = "Purchases recorded"
     INVALID_DATE_FORMAT = "Invalid date format. Use %Y-%m."
     NO_PURCHASES_PROVIDED = "No purchases provided"
+    WRONG_PURCHASES_TYPE = "Purchase must be list"
     INVALID_PURCHASE_DATA = "Invalid purchase data"
     CHAT_ID_REQUIRED = "Chat id is required"
     CHAT_ID_TYPE = "Chat id must be sting"

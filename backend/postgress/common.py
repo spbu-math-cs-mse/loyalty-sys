@@ -36,10 +36,10 @@ def recreate_table(connection, table_name, table_schema, should_drop=True):
 
         create_table_query = sql.SQL(
             f"""
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                {table_schema}
-            );
-        """
+                CREATE TABLE IF NOT EXISTS {table_name} (
+                    {table_schema}
+                );
+            """
         )
 
         cursor.execute(create_table_query)
@@ -63,6 +63,7 @@ def recreate_users_table(connection, should_drop=True):
     )
 
 
+# TODO(vvsg): change this function with handle/loading from file
 def fill_products_table(connection):
     try:
         cursor = connection.cursor()
@@ -137,7 +138,8 @@ def find_or_create_user(connection, chat_id):
         user = cursor.fetchone()
 
         if user:
-            return user[0], created
+            user_id, chat_id = user
+            return user_id, created
 
         insert_user_query = sql.SQL(
             "INSERT INTO users (chat_id) VALUES (%s) RETURNING *;"
@@ -145,7 +147,8 @@ def find_or_create_user(connection, chat_id):
         cursor.execute(insert_user_query, (chat_id,))
 
         created = True
-        return cursor.fetchone()[0], created
+        user_id, chat_id = cursor.fetchone()
+        return user_id, created
 
     except Exception as error:
         print("Error in find_or_create_user: ", error)
@@ -167,7 +170,8 @@ def insert_purchase(connection, user_id, date):
         )
         cursor.execute(insert_purchase_query, (user_id, to_db_readable_date(date)))
 
-        return cursor.fetchone()[0]
+        id, user_id, order_date = cursor.fetchone()
+        return id
     except Exception as error:
         print("Error in insert_purchase: ", error)
         connection.rollback()
@@ -192,7 +196,7 @@ def insert_purchase_info(connection, purchase_id, product_id, quantity):
     except Exception as error:
         print("Error in insert_purchase_info: ", error)
         connection.rollback()
-        raise
+        return None
 
     finally:
         if cursor:
@@ -232,14 +236,14 @@ def get_product_statistic(connection, product_id, start_date, end_date):
             params.append(to_db_readable_date(end_date))
 
         cursor.execute(base_query, tuple(params))
-        results = cursor.fetchall()
+        month, total_quality = cursor.fetchall()
 
         find_product_query = sql.SQL("SELECT * FROM products WHERE id = %s;")
 
         cursor.execute(find_product_query, (product_id,))
 
-        product_label = cursor.fetchone()[1]
-        return results, product_label
+        id, label, price = cursor.fetchone()
+        return total_quality, label
 
     except Exception as error:
         print("Error in get_product_statistic: ", error)
@@ -300,8 +304,9 @@ def get_average_purchase(connection, start_date, end_date):
             joined_purchase += " AND order_date <= %s"
         joined_purchase += ") as filtered "
 
-        joined_purchase += """on (filtered.id = purchase_info.product_id)) as joined_purchase
-        """
+        joined_purchase += (
+            "on (filtered.id = purchase_info.product_id)) as joined_purchase"
+        )
 
         sum_by_purchase = f"""
             (SELECT purchase_id, sum(price_copeck * quantity) as s from 
@@ -310,7 +315,7 @@ def get_average_purchase(connection, start_date, end_date):
             GROUP BY purchase_id) as sum_by_purchase
         """
 
-        result = f"""SELECT avg(s) from {sum_by_purchase}"""
+        result = f"SELECT avg(s) from {sum_by_purchase}"
 
         params = []
         if start_date is not None:

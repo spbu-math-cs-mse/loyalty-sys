@@ -70,21 +70,17 @@ def create_user():
         connection_pool.putconn(connection)
 
 
-# TODO(vvsg): we don't need this handle for now
-# @app.route("/user/<int:user_id>", methods=["GET"])
-# def get_user(user_id: int):
-#     # TODO for @vsdmitri: here should get some user data from db, remove the stub after implementation
-#     return jsonify({"username": "JohnDoe"})
-
-
 @app.route("/user/<int:user_id>/purchase", methods=["POST"])
 def record_purchase(user_id: int):
     data = request.json
     purchases_list = data.get("purchases", [])
     date = data.get("date")
 
-    if not purchases_list or not isinstance(purchases_list, list):
+    if not purchases_list:
         return jsonify({"message": Message.NO_PURCHASES_PROVIDED.value}), 400
+
+    if not isinstance(purchases_list, list):
+        return jsonify({"message": Message.WRONG_PURCHASES_TYPE.value}), 400
 
     if not date or not validate_date(date):
         return jsonify({"message": Message.INVALID_DATE_FORMAT.value}), 400
@@ -102,12 +98,17 @@ def record_purchase(user_id: int):
 
             insert_purchase_info(connection, purchase_id, product_id, quantity)
 
-        return jsonify(
-            {"message": Message.PURCHASES_RECORDED.value, "purchase_id": purchase_id},
+        return (
+            jsonify(
+                {
+                    "message": Message.PURCHASES_RECORDED.value,
+                    "purchase_id": purchase_id,
+                },
+            ),
             201,
         )
     except Exception as error:
-        return jsonify({"message": Message.DB_ERROR.value, "error": str(error)}, 400)
+        return (jsonify({"message": Message.DB_ERROR.value, "error": str(error)}), 400)
     finally:
         connection_pool.putconn(connection)
 
@@ -130,7 +131,7 @@ def get_product_values():
             connection, product_id, start_date, end_date
         )
         return jsonify(
-            {"label": product_label, "values": [element[1] for element in statistics]}
+            {"label": product_label, "values": [element for element in statistics]}
         )
     finally:
         connection_pool.putconn(connection)
