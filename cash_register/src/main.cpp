@@ -5,9 +5,9 @@
 #include <vector>
 
 #include <../common/logger.hpp>
-#include <third-party/cxxopts.hpp>
-#include <third-party/httplib.h>
-#include <third-party/json.h>
+#include <third_party/cxxopts.hpp>
+#include <third_party/httplib.h>
+#include <third_party/json.h>
 
 using json = nlohmann::json;
 
