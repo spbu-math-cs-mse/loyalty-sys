@@ -4,33 +4,22 @@
 
 POST /user - Создание нового пользователя
 
-* Параметры:
-    * chat_id (обязательный): идентификатор телеграм чата пользователя с ботом.
-* Тело запроса: 
-```json
-{ 
-  "chat_id": "1234567890" 
-}
-```
-* Пример ответа:
+- Параметры:
+  - chat_id (обязательный): идентификатор телеграм чата пользователя с ботом.
+- Тело запроса:
+
 ```json
 {
-    "message": "User created",
-    "user_id": "234567890abcdef1234567890abcdef12345678"
+  "chat_id": "1234567890"
 }
 ```
 
-## Получение данных пользователя
+- Пример ответа:
 
-GET /user/[user_id]
-
-* Параметры:
-    * user_id: идентификатор пользователя.
-* Пример запроса: `GET /user/12345`
-* Пример ответа:
 ```json
 {
-    "username": "JohnDoe"
+  "message": "User created",
+  "user_id": "234567890abcdef1234567890abcdef12345678"
 }
 ```
 
@@ -38,28 +27,32 @@ GET /user/[user_id]
 
 POST /user/[user_id]/purchase
 
-* Параметры:
-    * user_id: идентификатор пользователя.
-* Тело запроса:
+- Параметры:
+  - user_id: идентификатор пользователя.
+- Тело запроса:
+
 ```json
 {
-    "purchases": [
-        {
-            "product_id": 1,
-            "quantity": 2
-        },
-        {
-            "product_id": 3,
-            "quantity": 1
-        }
-    ]
+  "date": "2023-12",
+  "purchases": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    },
+    {
+      "product_id": 3,
+      "quantity": 1
+    }
+  ]
 }
 ```
-* Пример ответа:
+
+- Пример ответа:
+
 ```json
 {
-    "message": "Purchases recorded",
-    "user_id": 12345
+  "message": "Purchases recorded",
+  "user_id": 12345
 }
 ```
 
@@ -67,23 +60,22 @@ POST /user/[user_id]/purchase
 
 GET /data/values
 
-* Параметры:
-    * product_id (обязательный): идентификатор продукта.
-    * start_date (необязательный): начальная дата в формате "YYYY-MM".
-    * end_date (необязательный): конечная дата в формате "YYYY-MM".
-* Пример запроса:
+- Параметры:
+  - product_id (обязательный): идентификатор продукта.
+  - start_date (необязательный): начальная дата в формате "YYYY-MM".
+  - end_date (необязательный): конечная дата в формате "YYYY-MM".
+- Пример запроса:
+
 ```
     GET /data/values?product_id=1&start_date=2023-10&end_date=2023-12
 ```
-* Пример ответа:
+
+- Пример ответа:
+
 ```json
 {
-    "label": "Milk",
-    "values": [
-        5,
-        6,
-        7
-    ]
+  "label": "Milk",
+  "values": [5, 6, 7]
 }
 ```
 
@@ -91,17 +83,20 @@ GET /data/values
 
 GET /data/total_purchases
 
-* Параметры:
-    * start_date (необязательный): начальная дата в формате "YYYY-MM".
-    * end_date (необязательный): конечная дата в формате "YYYY-MM".
-* Пример запроса:
+- Параметры:
+  - start_date (необязательный): начальная дата в формате "YYYY-MM".
+  - end_date (необязательный): конечная дата в формате "YYYY-MM".
+- Пример запроса:
+
 ```
     GET /data/total_purchases?start_date=2023-10&end_date=2023-12
 ```
-* Пример ответа:
+
+- Пример ответа:
+
 ```json
 {
-    "total_purchases": 190300.0
+  "total_purchases": 190300.0
 }
 ```
 
@@ -109,17 +104,20 @@ GET /data/total_purchases
 
 GET /data/average_check
 
-* Параметры:
-    * start_date (необязательный): начальная дата в формате "YYYY-MM".
-    * end_date (необязательный): конечная дата в формате "YYYY-MM".
-* Пример запроса:
+- Параметры:
+  - start_date (необязательный): начальная дата в формате "YYYY-MM".
+  - end_date (необязательный): конечная дата в формате "YYYY-MM".
+- Пример запроса:
+
 ```
     GET /data/average_check?start_date=2023-10&end_date=2023-12
 ```
-* Пример ответа:
+
+- Пример ответа (в копейках):
+
 ```json
 {
-    "average_check": 2500.0
+  "average_check": 250000.0
 }
 ```
 
@@ -127,17 +125,20 @@ GET /data/average_check
 
 GET /data/visitor_count
 
-* Параметры:
-    * start_date (необязательный): начальная дата в формате "YYYY-MM".
-    * end_date (необязательный): конечная дата в формате "YYYY-MM".
-* Пример запроса:
+- Параметры:
+  - start_date (необязательный): начальная дата в формате "YYYY-MM".
+  - end_date (необязательный): конечная дата в формате "YYYY-MM".
+- Пример запроса:
+
 ```
     GET /data/visitor_count?start_date=2023-10&end_date=2023-12
 ```
-* Пример ответа:
+
+- Пример ответа:
+
 ```json
 {
-    "visitor_count": 100
+  "visitor_count": 100
 }
 ```
 
@@ -145,16 +146,19 @@ GET /data/visitor_count
 
 GET /data/products
 
-* Пример ответа:
+- Пример ответа:
+
 ```json
 [
-    {
-        "id": 1,
-        "name": "Milk"
-    },
-    {
-        "id": 2,
-        "name": "Bread"
-    }
+  {
+    "id": 1,
+    "label": "Milk",
+    "price_copeck": 1203
+  },
+  {
+    "id": 2,
+    "label": "Bread",
+    "price_copeck": 13
+  }
 ]
 ```
