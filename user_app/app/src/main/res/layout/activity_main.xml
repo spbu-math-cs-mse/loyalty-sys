@@ -6,44 +6,44 @@
     android:padding="16dp">
 
     <Button
-        android:id="@+id/btnScanCustomer"
+        android:id="@+id/scanCustomerButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Customer Data"/>
+        android:text="@string/scan_customer_data"/>
 
     <TextView
-        android:id="@+id/tvCustomerData"
+        android:id="@+id/customerDataTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Customer Data: None"/>
+        android:text="@string/customer_data_none"/>
 
     <Button
-        android:id="@+id/btnClearCustomer"
+        android:id="@+id/clearCustomerButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Clear Customer Data"/>
+        android:text="@string/clear_customer_data"/>
 
     <Button
-        android:id="@+id/btnScanPurchase"
+        android:id="@+id/scanPurchaseButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Purchase Data"/>
+        android:text="@string/scan_purchase_data"/>
 
     <TextView
-        android:id="@+id/tvPurchaseData"
+        android:id="@+id/purchaseDataTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Purchase Data: None"/>
+        android:text="@string/purchase_data_none"/>
 
     <Button
-        android:id="@+id/btnClearPurchase"
+        android:id="@+id/clearPurchaseButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Clear Purchase Data"/>
+        android:text="@string/clear_purchase_data"/>
 
     <Button
-        android:id="@+id/btnSendData"
+        android:id="@+id/sendDataButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Send Data to Server"/>
+        android:text="@string/send_data_to_server"/>
 </LinearLayout>
