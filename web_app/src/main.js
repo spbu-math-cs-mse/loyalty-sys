@@ -226,17 +226,17 @@ app
       },
       toast: {
         severity: {
-          success: "success", 
-          info: "info", 
-          warn: "warn", 
-          error: "error"
+          success: "success",
+          info: "info",
+          warn: "warn",
+          error: "error",
         },
         summary: {
           success: "Успешно",
           successTitle: "Выполнено",
           info: "Информация",
           warn: "Предупреждение",
-          error: "Ошибка"
+          error: "Ошибка",
         },
         detail: {
           coupons: {
@@ -247,8 +247,8 @@ app
             add: "Купон добавлен",
             edit: "Купон изменен",
             delete: "Купон удален",
-          }
-        }
+          },
+        },
       },
     },
   })

@@ -57,7 +57,7 @@ const getMoneySymbol = () => {
     default:
       return "";
   }
-}
+};
 </script>
 
 <template>
