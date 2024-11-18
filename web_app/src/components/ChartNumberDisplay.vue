@@ -45,6 +45,19 @@ watchEffect(() => {
     }, counterSpeed);
   }
 });
+
+const getMoneySymbol = () => {
+  switch (props.money?.toLowerCase()) {
+    case "rub":
+      return "₽";
+    case "usd":
+      return "$";
+    case "eur":
+      return "€";
+    default:
+      return "";
+  }
+}
 </script>
 
 <template>
@@ -57,7 +70,7 @@ watchEffect(() => {
         :class="beforeIcon"
       ></i>
       <span class="card__number text-2xl font-medium"
-        ><span>{{ money ? money : "" }}</span> {{ currentNumber }}</span
+        ><span>{{ getMoneySymbol() }}</span> {{ currentNumber }}</span
       >
       <i class="card__icon text-lg card-icon pi ml-3" :class="afterIcon"></i>
     </div>

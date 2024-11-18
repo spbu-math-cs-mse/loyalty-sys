@@ -12,6 +12,7 @@ import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
 import AutoComplete from "primevue/autocomplete";
 
+const axios = require('axios');
 const primevue = usePrimeVue();
 
 const getColorsForCharts = (count = 0, power = 500) => {
@@ -49,19 +50,19 @@ const getColorsForCharts = (count = 0, power = 500) => {
 const productList = ref([
   {
     id: 1,
-    name: "Молоко",
+    label: "Молоко",
   },
   {
     id: 2,
-    name: "Сыр",
+    label: "Сыр",
   },
   {
     id: 3,
-    name: "Яйца",
+    label: "Яйца",
   },
   {
     id: 5,
-    name: "Мука",
+    label: "Мука",
   },
 ]);
 const selectedProductList = ref([]);
@@ -100,17 +101,6 @@ const onProductFormSubmit = (e) => {
     productDates.value[1] = today;
   }
   if (e.valid) {
-    toast.add({
-      severity: "success",
-      summary: "Успешно",
-      detail: "Data loged to console",
-      life: 4000,
-    });
-    console.log("Product form submitted");
-    selectedProductList.value.forEach((element) => {
-      console.log("id: " + element.id, element.name);
-    });
-    console.log(productDates.value[0], productDates.value[1]);
     setChartLineData();
   }
 };
@@ -118,6 +108,15 @@ const onProductFormSubmit = (e) => {
 let today = new Date();
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
+
+const totalPurchases = ref();
+const averageCheck = ref();
+const visitorCount = ref();
+
+const fetchDate = ref({
+  start: today.toISOString().substring(0,7),
+  end: today.toISOString().substring(0,7)
+});
 
 const productDates = ref([]);
 
@@ -157,8 +156,39 @@ onMounted(() => {
   chartLineOptions.value = setChartOptionsLine();
   chartLineConfig.value = setChartConfigDoughnut();
 
-  // Example of collecting data
-  // ProductService.getProducts().then((data) => (productList.value = data));
+
+  axios.all([
+    axios.get('http://localhost:8080/data/total_purchases', {
+      params: {
+        start_date: fetchDate.value.start, 
+        end_date: fetchDate.value.end
+      }
+    }), 
+    axios.get('http://localhost:8080/data/average_check', {
+      params: {
+        start_date: fetchDate.value.start, 
+        end_date: fetchDate.value.end
+      }
+    }),
+    axios.get('http://localhost:8080/data/visitor_count', {
+      params: {
+        start_date: fetchDate.value.start, 
+        end_date: fetchDate.value.end
+      }
+    }),
+    axios.get('http://localhost:8080/data/products'),
+  ])
+  .then(axios.spread((totalPurchasesResponse, averageCheckResponse, visitorCountResponse, productListResponse) => {
+    totalPurchases.value = totalPurchasesResponse.data.total_purchases;
+    averageCheck.value = averageCheckResponse.data.average_check;
+    visitorCount.value = visitorCountResponse.data.visitor_count;
+
+    productList.value = productListResponse.data;
+  }))
+  .catch((error) => {
+    console.log(error);
+  });
+
 });
 
 const chartData = ref();
@@ -246,39 +276,36 @@ const setChartDoughnutData = () => {
   return chartData.value;
 };
 
-/* 
-  TODO: empty data after adding backend interaction
-        use loop for adding data to dataset (change labels, data and colors)
-*/
-
 const setChartLineData = () => {
   const monthsInRange = getMonthsInRange(
     productDates.value[0],
     productDates.value[1]
   );
+
+  chartLineData.value.labels = monthsInRange;
+  chartLineData.value.datasets = [];
+
   const color = getColorsForCharts(selectedProductList.value.length);
 
-  chartLineData.value = {
-    labels: monthsInRange,
-    datasets: [
-      {
-        label: "Товар 1",
-        data: [65, 59, 80, 81, 56, 55, 40],
-        fill: false,
-        backgroundColor: color[0],
-        borderColor: color[0],
+  for(let i = 0; i < selectedProductList.value.length; i++) {
+    axios.get('http://localhost:8080/data/values', {
+      params: {
+        product_id: selectedProductList.value[i].id,
+        start_date: productDates.value[0], 
+        end_date: productDates.value[1]
+      }
+    })
+    .then((response) => {
+      chartLineData.value.datasets.push({
+        label: response.data.label,
+        data: response.data.values,
+        backgroundColor: color[i],
+        borderColor: color[i],
         borderWidth: 2,
-      },
-      {
-        label: "Товар 2",
-        data: [100, 230, 5, 81, 92, 73, 37],
         fill: false,
-        backgroundColor: color[1],
-        borderColor: color[1],
-        borderWidth: 2,
-      },
-    ],
-  };
+      })
+    })
+  }
 };
 
 const setChartOptionsLine = () => {
@@ -397,19 +424,19 @@ const toast = useToast();
       <div class="flex flex-column gap-4 w-full lg:w-auto">
         <ChartNumberDisplay
           title="Cумма покупок"
-          number="231654.00"
-          money="₽"
-          afterIcon="pi-arrow-down-right"
+          :number="totalPurchases"
+          money="rub"
+          afterIcon=""
         />
         <ChartNumberDisplay
           title="Средний чек"
-          number="4990.00"
-          money="₽"
-          afterIcon="pi-arrow-up-right"
+          :number="averageCheck"
+          money="rub"
+          afterIcon=""
         />
         <ChartNumberDisplay
           title="Поситители"
-          number="546"
+          :number="visitorCount"
           beforeIcon="pi-users"
         />
       </div>
@@ -428,7 +455,7 @@ const toast = useToast();
               name="selectedProductList"
               v-model="selectedProductList"
               autoOptionFocus="true"
-              optionLabel="name"
+              optionLabel="label"
               inputId="products_multiple"
               :placeholder="selectedProductList.length === 0 ? 'Товар' : ''"
               :suggestions="filteredProductList"
