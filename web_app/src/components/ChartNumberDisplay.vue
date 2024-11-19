@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watchEffect, defineProps } from "vue";
+import { ref, watchEffect } from "vue";
 
 const props = defineProps({
   title: {
@@ -48,7 +48,7 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div class="card border-round-lg overflow-hidden shadow-1">
+  <div class="card border-round-lg overflow-hidden shadow-1 select-none">
     <h6 class="card__title mb-2">{{ title }}</h6>
     <div class="flex align-items-center">
       <i
