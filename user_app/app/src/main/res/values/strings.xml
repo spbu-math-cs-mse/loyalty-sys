@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">UserApp</string>
+    <string name="clear_purchase_data">Clear Purchase Data</string>
+    <string name="send_data_to_server">Send Data to Server</string>
+    <string name="purchase_data_none">Purchase Data: None</string>
+    <string name="scan_purchase_data">Scan Purchase Data</string>
+    <string name="clear_customer_data">Clear Customer Data</string>
+    <string name="customer_data_none">Customer Data: None</string>
+    <string name="scan_customer_data">Scan Customer Data</string>
+</resources>

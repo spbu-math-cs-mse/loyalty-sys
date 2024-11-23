@@ -13,3 +13,5 @@ class Message(Enum):
     CHAT_ID_TYPE = "Chat id must be sting"
     PRODUCT_ID_REQUIRED = "Product id is required"
     DB_ERROR = "DB error"
+    GENDER_REQUIRED = "Gender is required"
+    GENDER_UPDATED = "Gender updated successfully"
