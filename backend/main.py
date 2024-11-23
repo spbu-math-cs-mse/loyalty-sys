@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from message import Message
 
 from postgress.common import (
@@ -17,6 +18,9 @@ from postgress.common import (
 )
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret'
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app)
 
 connection_pool = None
 
@@ -198,6 +202,34 @@ def get_products():
         )
     finally:
         connection_pool.putconn(connection)
+
+
+@app.route("/user/<int:user_id>/discount", methods=["GET"])
+def get_user_discount_api(user_id: int):
+    discount = {"type": "процент", "value": "10"}  # TODO: implement database function
+    return jsonify(discount)
+
+
+@app.route("/user/<int:user_id>/total_purchases", methods=["GET"])
+def get_user_total_purchases_api(user_id: int):
+    total_purchases = 1000.0  # TODO: implement database function
+    return jsonify({"total_purchases": total_purchases})
+
+
+@app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
+def get_user_loyalty_level_api(user_id: int):
+    loyalty_level = "Серебряный"  # TODO: implement database function
+    return jsonify({"loyalty_level": loyalty_level})
+
+
+@app.route("/user/<int:user_id>/gender", methods=["PUT"])
+def update_user_gender_api(user_id: int):
+    data = request.json
+    gender = data.get("gender")
+    if not gender:
+        return jsonify({"message": Message.GENDER_REQUIRED.value}), 400
+    # TODO: update gender in database
+    return jsonify({"message": Message.GENDER_UPDATED.value})
 
 
 if __name__ == "__main__":
