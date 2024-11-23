@@ -2,3 +2,4 @@ obj/
 server
 .vscode
 __pycache__
+.env
