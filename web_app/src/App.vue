@@ -30,6 +30,12 @@ const menuItems = ref([
     route: "/privilege",
     command: () => closeMenu(),
   },
+  {
+    label: "Настройки",
+    icon: "pi pi-cog",
+    route: "/settings",
+    command: () => closeMenu(),
+  },
   // Allowed comments, will be needed later
   // {
   //   label: "Купоны",

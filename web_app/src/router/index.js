@@ -23,6 +23,11 @@ const routes = [
     component: () => import("../views/PrivilegeView.vue"),
   },
   {
+    path: "/settings",
+    name: "settings",
+    component: () => import("../views/SettingsView.vue"),
+  },
+  {
     path: "/404",
     name: "notfound",
     component: () => import("../views/PageNotFound.vue"),

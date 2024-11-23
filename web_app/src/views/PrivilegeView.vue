@@ -7,69 +7,224 @@ import Step from "primevue/step";
 import StepPanel from "primevue/steppanel";
 import Button from "primevue/button";
 
+import Tabs from 'primevue/tabs';
+import TabList from 'primevue/tablist';
+import Tab from 'primevue/tab';
+import TabPanels from 'primevue/tabpanels';
+import TabPanel from 'primevue/tabpanel';
+import Toolbar from "primevue/toolbar";
+import Badge from 'primevue/badge';
+import Dialog from "primevue/dialog";
+import InputNumber from "primevue/inputnumber";
+import InputText from "primevue/inputtext";
+
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 
 import { ref } from "vue";
+import { useToast } from "primevue/usetoast";
+import { usePrimeVue } from "primevue/config";
 
-const stepItems = ref([
+const toast = useToast();
+const primevue = usePrimeVue();
+const languageConfig = primevue.config.locale;
+const toastConfig = languageConfig.toast
+
+const product = ref({});
+const productDialog = ref(false);
+const submitted = ref(false);
+const productDialogText = ref();
+const deleteProductDialog = ref(false);
+
+const privilegeLevels = ref([
   {
     label: "Уровень 1",
-    icon: "pi pi-user",
-    content: "Скидка 5% на кросовки",
+    sale: {
+      all: 5,
+    },
+    starts_from: 0,
   },
   {
     label: "Уровень 2",
-    icon: "pi pi-user",
-    content: "Скидка 10% на одежду и обувь",
+    sale: {
+      all: 15,
+    },
+    starts_from: 2000,
   },
   {
     label: "Уровень 3",
-    icon: "pi pi-user",
-    content: "Скидка 15% на все товары",
+    sale: {
+      all: 25,
+    },
+    starts_from: 5000,
   },
 ]);
+
+const openNew = () => {
+  productDialogText.value = languageConfig.addTitle;
+  product.value = {};
+  submitted.value = false;
+  productDialog.value = true;
+};
+const hideDialog = () => {
+  productDialog.value = false;
+  submitted.value = false;
+};
+const confirmDeleteProduct = (prod) => {
+  product.value = prod;
+  deleteProductDialog.value = true;
+};
+const deleteProduct = () => {
+  privilegeLevels.value = privilegeLevels.value.filter((val) => val.label !== product.value.label);
+  deleteProductDialog.value = false;
+  product.value = {};
+  toast.add({
+    severity: toastConfig.severity.success,
+    summary: toastConfig.summary.success,
+    detail: toastConfig.detail.privillege.delete,
+    life: 3000,
+  });
+};
+const editProduct = (prod) => {
+  productDialogText.value = languageConfig.editTitle;
+  product.value = { ...prod };
+  productDialog.value = true;
+};
+const findIndexById = (id) => {
+  let index = -1;
+  for (let i = 0; i < privilegeLevels.value.length; i++) {
+    if (privilegeLevels.value[i].id === id) {
+      index = i;
+      break;
+    }
+  }
+
+  return index;
+};
 </script>
 
 <template>
-  <div class="privilege lg:py-4 py-1 md:pl-3 pl-0">
+  <div class="privilege container__wrapper lg:py-4 py-1 md:pl-3 pl-0">
     <SectionHeaderInfo title="Привилегии" />
 
-    <div class="mt-2">
-      <Stepper value="1">
-        <StepItem
-          v-for="(step, index) in stepItems"
-          :value="`${++index}`"
-          :key="index"
-        >
-          <Step>
-            <h5 class="text-sm font-normal">{{ step.label }}</h5>
-          </Step>
-          <StepPanel v-slot="{ activateCallback }" class="border-round-lg">
-            <div class="flex flex-col">
-              <div
-                class="rounded bg-surface-50 py-3 flex-auto flex justify-center items-center font-medium"
-              >
-                {{ step.content }}
-              </div>
-            </div>
-            <div class="py-5">
-              <Button
-                v-if="index > 1"
-                severity="secondary"
-                class="mr-2 text-sm"
-                label="Назад"
-                @click="activateCallback(`${index - 1}`)"
-              />
-              <Button
-                v-if="index < stepItems.length"
-                class="text-sm"
-                label="Вперед"
-                @click="activateCallback(`${index + 1}`)"
-              />
-            </div>
-          </StepPanel>
-        </StepItem>
-      </Stepper>
+    <Toolbar class="mb-4">
+        <template #start>
+          <Button
+            :label="languageConfig.addTitle"
+            icon="pi pi-plus"
+            class="mr-2"
+            @click="openNew"
+            outlined
+          />
+        </template>
+      </Toolbar>
+
+    <div class="border-round-lg overflow-hidden shadow-1">
+      <Tabs :value="0" scrollable>
+        <TabList>
+            <Tab v-for="(tab, index) in privilegeLevels" :key="tab.label" :value="index">
+                <Badge :value="index + 1"></Badge>
+                {{ tab.label }}
+            </Tab>
+        </TabList>
+        <TabPanels>
+            <TabPanel v-for="(tab, index) in privilegeLevels" :key="tab.sale" :value="index">
+                <div class="p-2">
+                  <p class="m-0">Скидка на все товары: {{ tab.sale.all }}</p>
+                  <p class="m-0">Порог входа: {{ tab.starts_from }}</p>
+                </div>
+
+                <div class="flex mt-3 gap-2">
+                    <Button :label="languageConfig.editTitle" @click="editProduct(tab)" outlined icon="pi pi-pencil" severity="secondary" size="small"/>
+                    <Button :label="languageConfig.deleteTitle" @click="confirmDeleteProduct(tab)" outlined icon="pi pi-trash" severity="danger" size="small" />
+                </div>
+            </TabPanel>
+        </TabPanels>
+      </Tabs>
     </div>
+
+    <Dialog
+      v-model:visible="deleteProductDialog"
+      :style="{ width: '450px' }"
+      :header="languageConfig.deleteTitle"
+      :modal="true"
+    >
+      <div class="flex items-center gap-4">
+        <i class="pi pi-exclamation-triangle !text-3xl" />
+        <span v-if="product"
+          >Уверены, что хотите удалить <b>{{ product.label }}</b
+          >?</span
+        >
+      </div>
+      <template #footer>
+        <Button
+          :label="languageConfig.reject"
+          icon="pi pi-times"
+          text
+          @click="deleteProductDialog = false"
+        />
+        <Button :label="languageConfig.accept" icon="pi pi-check" @click="deleteProduct" />
+      </template>
+    </Dialog>
+
+    <Dialog
+      v-model:visible="productDialog"
+      :header="productDialogText"
+      :modal="true"
+    >
+      <div class="flex flex-col gap-6">
+        <div class="col-span-6 max-w-14rem">
+          <label for="label" class="block font-bold mb-3">Название</label>
+          <InputText
+            id="label"
+            v-model.trim="product.label"
+            required="true"
+            autofocus
+            :invalid="submitted && !product.label"
+            fluid
+          />
+          <small v-if="submitted && !product.label" class="text-red-500"
+            >Это обязательное поле.</small
+          >
+        </div>
+        <div class="col-span-6">
+          <label for="saleAll" class="block font-bold mb-3"
+            >Cкидка на все товары</label
+          >
+          <InputNumber
+            v-model="product.sale.all"
+            inputId="saleAll"
+            mode="decimal"
+            showButtons
+            :min="0"
+            :max="100"
+            fluid
+          />
+        </div>
+        <div class="col-span-6">
+          <label for="startsFrom" class="block font-bold mb-3"
+            >Порог входа</label
+          >
+          <InputNumber
+            v-model="product.starts_from"
+            inputId="saleAll"
+            mode="decimal"
+            showButtons
+            :min="0"
+            :max="10000"
+            fluid
+          />
+        </div>
+      </div>
+
+      <template #footer>
+        <Button :label="languageConfig.cancelTitle" icon="pi pi-times" text @click="hideDialog" />
+        <Button
+          :label="productDialogText"
+          icon="pi pi-check"
+          @click="saveProduct"
+        />
+      </template>
+    </Dialog>
+
   </div>
 </template>

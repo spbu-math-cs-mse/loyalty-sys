@@ -115,6 +115,7 @@ app
       clear: "Очистить",
       editTitle: "Изменить",
       addTitle: "Добавить",
+      saveTitle: "Сохранить",
       deleteTitle: "Удалить",
       cancelTitle: "Отмена",
       deleteSelected: "Удалить все выбранное",
@@ -247,7 +248,12 @@ app
             add: "Купон добавлен",
             edit: "Купон изменен",
             delete: "Купон удален",
-          }
+          },
+          privillege: {
+            add: "Уровень добавлен",
+            edit: "Уровень изменен",
+            delete: "Уровень удален",
+          },
         }
       },
     },

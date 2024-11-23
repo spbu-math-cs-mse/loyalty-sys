@@ -218,6 +218,7 @@ products.value = [
         <template #start>
           <Button
             :label="languageConfig.addTitle"
+            outlined
             icon="pi pi-plus"
             class="mr-2"
             @click="openNew"
