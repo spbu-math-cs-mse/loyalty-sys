@@ -137,25 +137,25 @@ onMounted(() => {
 
   axios
     .all([
-      axios.get("http://localhost:8080/data/total_purchases", {
+      axios.get("http://84.201.143.213:5000/data/total_purchases", {
         params: {
           start_date: fetchDate.value.start,
           end_date: fetchDate.value.end,
         },
       }),
-      axios.get("http://localhost:8080/data/average_check", {
+      axios.get("http://84.201.143.213:5000/data/average_check", {
         params: {
           start_date: fetchDate.value.start,
           end_date: fetchDate.value.end,
         },
       }),
-      axios.get("http://localhost:8080/data/visitor_count", {
+      axios.get("http://84.201.143.213:5000/data/visitor_count", {
         params: {
           start_date: fetchDate.value.start,
           end_date: fetchDate.value.end,
         },
       }),
-      axios.get("http://localhost:8080/data/products"),
+      axios.get("http://84.201.143.213:5000/data/products"),
     ])
     .then(
       axios.spread(
@@ -276,7 +276,7 @@ const setChartLineData = () => {
 
   for (let i = 0; i < selectedProductList.value.length; i++) {
     axios
-      .get("http://localhost:8080/data/values", {
+      .get("http://84.201.143.213:5000/data/values", {
         params: {
           product_id: selectedProductList.value[i].id,
           start_date: productDates.value[0],
