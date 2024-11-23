@@ -49,6 +49,7 @@ def send_info(message):
 def send_qrcode(message):
     try:
         user_id = get_user_id(message.chat.id)
+        # TODO: think about saving this, not regenerating
         qr_code = generate_qr_code(user_id)
         bot.send_photo(message.chat.id, qr_code)
     except requests.exceptions.RequestException as e:
