@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from message import Message
 
 from postgress.common import (
@@ -11,12 +12,20 @@ from postgress.common import (
     insert_purchase_info,
     get_product_statistic,
     get_purchases_count,
+    get_user_discount,
     get_average_purchase,
     get_visits_count,
     get_all_products,
+    set_gender,
+    set_user_discount,
+    Gender,
+    DiscountType,
 )
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = "secret"
+app.config["CORS_HEADERS"] = "Content-Type"
+CORS(app)
 
 connection_pool = None
 
@@ -122,7 +131,12 @@ def get_product_values():
     if product_id is None:
         return jsonify({"message": Message.PRODUCT_ID_REQUIRED.value}), 400
 
-    if not validate_date(start_date) or not validate_date(end_date):
+    if (
+        not start_date
+        or not validate_date(start_date)
+        or not end_date
+        or not validate_date(end_date)
+    ):
         return jsonify({"message": Message.INVALID_DATE_FORMAT.value}), 400
 
     try:
@@ -200,22 +214,82 @@ def get_products():
         connection_pool.putconn(connection)
 
 
+def get_discount_type(discount):
+    try:
+        return DiscountType(discount.lower())
+    except:
+        print(f"Invalid discount: {discount}")
+        return None
+
+
 @app.route("/user/<int:user_id>/discount", methods=["GET"])
 def get_user_discount_api(user_id: int):
-    discount = {"type": "процент", "value": "10"}  # TODO: implement database function
-    return jsonify(discount)
+    try:
+        connection = connection_pool.getconn()
+        result = get_user_discount(connection, user_id)
+
+        if result is None:
+            return (
+                jsonify({"type": "unknown", "value": None}),
+                200,
+            )
+
+        discount_type, level = result
+
+        return (
+            jsonify({"type": discount_type, "value": level}),
+            200,
+        )
+    finally:
+        connection_pool.putconn(connection)
+
+
+@app.route("/user/<int:user_id>/discount", methods=["PUT"])
+def set_user_discount_api(user_id: int):
+    try:
+        connection = connection_pool.getconn()
+        discount_id = request.json.get("discount_id")
+        if not discount_id:
+            return jsonify({"message": Message.NO_DISCOUNT.value}), 400
+
+        result = set_user_discount(connection, user_id, discount_id)
+
+        if result is None:
+            return jsonify({"message": Message.INVALID_DISCOUNT.value}), 400
+
+        return jsonify({"message": Message.GENDER_UPDATED.value}), 200
+    finally:
+        connection_pool.putconn(connection)
 
 
 @app.route("/user/<int:user_id>/total_purchases", methods=["GET"])
 def get_user_total_purchases_api(user_id: int):
-    total_purchases = 1000.0  # TODO: implement database function
-    return jsonify({"total_purchases": total_purchases})
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    if not validate_date(start_date) or not validate_date(end_date):
+        return jsonify({"message": Message.INVALID_DATE_FORMAT.value}), 400
+
+    try:
+        connection = connection_pool.getconn()
+        result = get_purchases_count(connection, start_date, end_date, user_id)
+        return jsonify({"total_purchases": result})
+    finally:
+        connection_pool.putconn(connection)
 
 
-@app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
-def get_user_loyalty_level_api(user_id: int):
-    loyalty_level = "Серебряный"  # TODO: implement database function
-    return jsonify({"loyalty_level": loyalty_level})
+# @app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
+# def get_user_loyalty_level_api(user_id: int):
+#     loyalty_level = "Серебряный"  # TODO: implement database function
+#     return jsonify({"loyalty_level": loyalty_level})
+
+
+def get_gender(gender):
+    try:
+        return Gender(gender.lower())
+    except:
+        print(f"Invalid gender: {gender}")
+        return None
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])
@@ -224,8 +298,18 @@ def update_user_gender_api(user_id: int):
     gender = data.get("gender")
     if not gender:
         return jsonify({"message": Message.GENDER_REQUIRED.value}), 400
-    # TODO: update gender in database
-    return jsonify({"message": Message.GENDER_UPDATED.value})
+
+    gender = get_gender(gender)
+    if not gender:
+        return jsonify({"message": Message.INVALID_GENDER.value}), 400
+
+    try:
+        connection = connection_pool.getconn()
+        if set_gender(connection, user_id, gender):
+            return jsonify({"message": Message.GENDER_UPDATED.value}), 200
+        return jsonify({"message": Message.INVALID_GENDER.value}), 400
+    finally:
+        connection_pool.putconn(connection)
 
 
 if __name__ == "__main__":

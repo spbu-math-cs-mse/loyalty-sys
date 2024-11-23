@@ -16,7 +16,6 @@ const closeMenu = () => {
   mobileMenuFixed.value = false;
 };
 
-
 const menuItems = ref([
   {
     label: "Статистика",
@@ -197,7 +196,21 @@ const { width, height } = useBreakpoints();
     </Menu>
 
     <div class="p-2 w-full">
-      <router-view />
+      <Transition name="fade">
+        <router-view />
+      </Transition>
     </div>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 350ms cubic-bezier(0.665, 1.16, 0.77, 0.985);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

@@ -33,6 +33,10 @@ const routes = [
     redirect: { name: "notfound" },
     // component: () => import("../views/SalesView.vue"),
   },
+  {
+    path: "/:catchAll(.*)",
+    redirect: { name: "notfound" },
+  },
 ];
 
 const router = createRouter({
