@@ -5,6 +5,8 @@ from common import get_bot_token, create_info_message, generate_data_for_qr_code
 from message import BotMessages
 from gender import Genders
 from telebot import types
+from qrcode.image.styledpil import StyledPilImage
+from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 
 import telebot
 import requests
@@ -18,8 +20,7 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 @bot.message_handler(commands=["start"])
 def start_message(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("/info", "/qrcode", "/gender")
+    markup = create_default_buttons()
     bot.send_message(
         message.chat.id, BotMessages.START_MESSAGE.value, reply_markup=markup
     )
@@ -66,12 +67,21 @@ def ask_gender(message):
     bot.register_next_step_handler(message, process_gender)
 
 
+def create_default_buttons():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add("/info", "/qrcode", "/gender")
+    return markup
+
+
 def process_gender(message):
     gender = message.text.lower()
     if gender in [g.value for g in Genders]:
         try:
             update_gender(message.chat.id, gender)
-            bot.send_message(message.chat.id, BotMessages.GENDER_UPDATED.value)
+            markup = create_default_buttons()
+            bot.send_message(
+                message.chat.id, BotMessages.GENDER_UPDATED.value, reply_markup=markup
+            )
         except requests.exceptions.RequestException as e:
             bot.send_message(
                 message.chat.id, f"{BotMessages.BACKEND_ERROR.value} ({e})"
@@ -134,7 +144,12 @@ def generate_qr_code(user_id):
     )
     qr.add_data(generate_data_for_qr_code(user_id))
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr.make_image(
+        fill_color="black",
+        back_color="white",
+        image_factory=StyledPilImage,
+        module_drawer=RoundedModuleDrawer(),
+    )
     img_byte_arr = BytesIO()
     img.save(img_byte_arr, format="PNG")
     return img_byte_arr.getvalue()
