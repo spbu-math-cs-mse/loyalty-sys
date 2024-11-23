@@ -291,7 +291,10 @@ const setChartLineData = () => {
           borderColor: color[i],
           borderWidth: 2,
           fill: false,
-        });
+        })
+      })
+      .catch((error) => {
+        console.log(error);
       });
   }
 };
@@ -423,7 +426,7 @@ const toast = useToast();
           afterIcon=""
         />
         <ChartNumberDisplay
-          title="Поситители"
+          title="Посетители"
           :number="visitorCount"
           beforeIcon="pi-users"
         />
