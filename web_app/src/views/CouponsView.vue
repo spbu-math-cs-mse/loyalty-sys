@@ -26,7 +26,7 @@ onMounted(() => {
 
 const primevue = usePrimeVue();
 const languageConfig = primevue.config.locale;
-const toastConfig = languageConfig.toast
+const toastConfig = languageConfig.toast;
 
 const toast = useToast();
 const dt = ref();
@@ -367,7 +367,12 @@ products.value = [
       </div>
 
       <template #footer>
-        <Button :label="languageConfig.cancelTitle" icon="pi pi-times" text @click="hideDialog" />
+        <Button
+          :label="languageConfig.cancelTitle"
+          icon="pi pi-times"
+          text
+          @click="hideDialog"
+        />
         <Button
           :label="productDialogText"
           icon="pi pi-check"
@@ -396,7 +401,11 @@ products.value = [
           text
           @click="deleteProductDialog = false"
         />
-        <Button :label="languageConfig.accept" icon="pi pi-check" @click="deleteProduct" />
+        <Button
+          :label="languageConfig.accept"
+          icon="pi pi-check"
+          @click="deleteProduct"
+        />
       </template>
     </Dialog>
 

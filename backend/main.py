@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from message import Message
 
 from postgress.common import (
@@ -17,6 +18,9 @@ from postgress.common import (
 )
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'secret'
+app.config['CORS_HEADERS'] = 'Content-Type'
+CORS(app)
 
 connection_pool = None
 
