@@ -89,16 +89,43 @@ const editProduct = (prod) => {
   product.value = { ...prod };
   productDialog.value = true;
 };
-const findIndexById = (id) => {
+const findIndexByLabel = (label) => {
   let index = -1;
   for (let i = 0; i < privilegeLevels.value.length; i++) {
-    if (privilegeLevels.value[i].id === id) {
+    if (privilegeLevels.value[i].label === label) {
       index = i;
       break;
     }
   }
 
   return index;
+};
+const saveProduct = () => {
+  submitted.value = true;
+
+  if (product?.value.label?.trim()) {
+    if (product.value.label) {
+      console.log("=====================     1     ===========================");
+      privilegeLevels.value[findIndexByLabel(product.value.label)] = product.value;
+      toast.add({
+        severity: toastConfig.severity.success,
+        summary: toastConfig.summary.successTitle,
+        detail: toastConfig.detail.privillege.edit,
+        life: 3000,
+      });
+    } else {
+      console.log("=====================    2     ===========================");
+      toast.add({
+        severity: toastConfig.severity.success,
+        summary: toastConfig.summary.success,
+        detail: toastConfig.detail.privillege.add,
+        life: 3000,
+      });
+    }
+
+    productDialog.value = false;
+    product.value = {};
+  }
 };
 </script>
 
@@ -191,7 +218,7 @@ const findIndexById = (id) => {
             >Cкидка на все товары</label
           >
           <InputNumber
-            v-model="product.sale.all"
+            v-model="product.saleAll"
             inputId="saleAll"
             mode="decimal"
             showButtons
@@ -206,7 +233,7 @@ const findIndexById = (id) => {
           >
           <InputNumber
             v-model="product.starts_from"
-            inputId="saleAll"
+            inputId="startsFrom"
             mode="decimal"
             showButtons
             :min="0"

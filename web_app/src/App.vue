@@ -139,7 +139,7 @@ const { width, height } = useBreakpoints();
     <Menu
       v-if="width >= menuExpandWidth"
       :model="menuItems"
-      class="aside overflow-scroll sticky top-0 p-2 top-0 animate-duration-500 shadow-1 border-none"
+      class="aside overflow-scroll sticky p-2 top-0 fadeinleft animation-ease-out animation-duration-400 shadow-1 border-none"
       :class="{ 'min-w-min': !desktopMenuFixed }"
     >
       <template #start>
@@ -202,7 +202,7 @@ const { width, height } = useBreakpoints();
     </Menu>
 
     <div class="p-2 w-full">
-      <Transition name="fade">
+      <Transition name="fadeIn">
         <router-view />
       </Transition>
     </div>
@@ -210,13 +210,14 @@ const { width, height } = useBreakpoints();
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 350ms cubic-bezier(0.665, 1.16, 0.77, 0.985);
+.fadeIn-enter-active,
+.fadeIn-leave-active{
+  transition: all 350ms cubic-bezier(0.665, 1.16, 0.77, 0.985);
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.fadeIn-enter-from,
+.fadeIn-leave-to {
   opacity: 0;
+  transform: translateY(5px);
 }
 </style>

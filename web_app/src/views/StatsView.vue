@@ -394,7 +394,7 @@ const toast = useToast();
 </script>
 
 <template>
-  <div class="stats lg:py-4 py-1 md:pl-3 pl-0">
+  <div class="stats container__wrapper lg:py-4 py-1 md:pl-3 pl-0">
     <SectionHeaderInfo title="Статистика" />
 
     <div

@@ -56,8 +56,19 @@ const toastConfig = languageConfig.toast
     </Toolbar>
 
     <div class="p-3">
-      <component :is="toolbarSettings[value].component" />
+      <KeepAlive>
+        <component :is="toolbarSettings[value].component" class="mt-1 settings__component"/>
+      </KeepAlive>
     </div>
 
   </div>
 </template>
+
+<style scoped>
+.settings__component /deep/ .settings__title {
+  color: var(--p-text-color);
+}
+.settings__component /deep/ .p-inputtext {
+  max-width: 5rem;
+}
+</style>
