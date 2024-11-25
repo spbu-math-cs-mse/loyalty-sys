@@ -241,6 +241,8 @@ def get_product_statistic(connection, product_id, start_date, end_date):
             (start, end, product_id, start, end),
         )
 
+        cursor.execute(base_query, tuple(params))
+
         qualities = [total_quality for month, total_quality in cursor.fetchall()]
 
         find_product_query = sql.SQL("SELECT * FROM products WHERE id = %s;")
