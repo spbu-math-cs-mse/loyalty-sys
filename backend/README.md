@@ -52,7 +52,7 @@ POST /user/[user_id]/purchase
 ```json
 {
   "message": "Purchases recorded",
-  "user_id": 12345
+  "purchase_id": 1
 }
 ```
 
@@ -62,8 +62,8 @@ GET /data/values
 
 - Параметры:
   - product_id (обязательный): идентификатор продукта.
-  - start_date (необязательный): начальная дата в формате "YYYY-MM".
-  - end_date (необязательный): конечная дата в формате "YYYY-MM".
+  - start_date (обязательный): начальная дата в формате "YYYY-MM".
+  - end_date (обязательный): конечная дата в формате "YYYY-MM".
 - Пример запроса:
 
 ```

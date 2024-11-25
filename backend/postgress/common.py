@@ -208,43 +208,48 @@ def get_product_statistic(connection, product_id, start_date, end_date):
     try:
         cursor = connection.cursor()
         base_query = """
+            WITH date_series AS (
+                SELECT generate_series(
+                    %s::date,
+                    %s::date,
+                    '1 month'
+                )::date AS month_start
+            ),
+            
+            purchase_full AS (
+                SELECT order_date, quantity, product_id FROM purchase JOIN 
+                    purchase_info on (purchase.id = purchase_info.purchase_id)
+                WHERE
+                    product_id = %s AND order_date >= %s AND order_date <= %s
+            )
+
             SELECT
-                DATE_TRUNC('month', order_date) AS month,
-                SUM(quantity) AS total_quantity
+                to_char(date_series.month_start, 'YYYY-MM') AS month,
+                COALESCE(SUM(purchase_full.quantity), 0) AS total_quantity
             FROM
-                (SELECT order_date, quantity, product_id FROM purchase JOIN purchase_info on (purchase.id = purchase_info.purchase_id)) tmp
-            WHERE
-                product_id = %s
-            """
-
-        if start_date is not None:
-            base_query += " AND order_date >= %s"
-        if end_date is not None:
-            base_query += " AND order_date <= %s"
-
-        base_query += """
+                date_series LEFT JOIN purchase_full on to_char(purchase_full.order_date, 'YYYY-MM') = to_char(date_series.month_start, 'YYYY-MM') 
             GROUP BY
                 month
             ORDER BY
                 month;
             """
 
-        params = [product_id]
-        if start_date is not None:
-            params.append(to_db_readable_date(start_date))
-        if end_date is not None:
-            params.append(to_db_readable_date(end_date))
+        start = to_db_readable_date(start_date)
+        end = to_db_readable_date(end_date)
+        cursor.execute(
+            base_query,
+            (start, end, product_id, start, end),
+        )
 
-        cursor.execute(base_query, tuple(params))
-        month, total_quality = cursor.fetchall()
+        qualities = [total_quality for month, total_quality in cursor.fetchall()]
 
         find_product_query = sql.SQL("SELECT * FROM products WHERE id = %s;")
 
         cursor.execute(find_product_query, (product_id,))
 
         id, label, price = cursor.fetchone()
-        return total_quality, label
 
+        return qualities, label
     except Exception as error:
         print("Error in get_product_statistic: ", error)
         return None
@@ -260,7 +265,7 @@ def get_purchases_count(connection, start_date, end_date):
 
         base_query = """
             SELECT
-                SUM(1)
+                COALESCE(SUM(1), 0)
             FROM
                 purchase_info JOIN purchase on (purchase.id = purchase_id)
             WHERE 1=1
@@ -279,7 +284,9 @@ def get_purchases_count(connection, start_date, end_date):
 
         cursor.execute(base_query, tuple(params))
 
-        return cursor.fetchone()
+        # fetchone returns row with 1 element
+        purchases_count = cursor.fetchone()[0]
+        return purchases_count
     except Exception as error:
         print("Error in get_purchases_count: ", error)
         return None
@@ -315,7 +322,7 @@ def get_average_purchase(connection, start_date, end_date):
             GROUP BY purchase_id) as sum_by_purchase
         """
 
-        result = f"SELECT avg(s) from {sum_by_purchase}"
+        result = f"SELECT COALESCE(avg(s), 0) from {sum_by_purchase}"
 
         params = []
         if start_date is not None:
@@ -325,7 +332,10 @@ def get_average_purchase(connection, start_date, end_date):
 
         cursor.execute(result, tuple(params))
 
-        return cursor.fetchone()
+        # fetchone returns row with 1 element
+        average_check = cursor.fetchone()[0]
+
+        return average_check
     except Exception as error:
         print("Error in get_average_purchase: ", error)
         return None
@@ -341,7 +351,7 @@ def get_visits_count(connection, start_date, end_date):
 
         base_query = """
             SELECT
-                SUM(1)
+                COALESCE(SUM(1), 0)
             FROM
                 purchase
             WHERE 1=1
@@ -360,7 +370,9 @@ def get_visits_count(connection, start_date, end_date):
 
         cursor.execute(base_query, tuple(params))
 
-        return cursor.fetchone()
+        # fetchone returns row with 1 element
+        users_count = cursor.fetchone()[0]
+        return users_count
     except Exception as error:
         print("Error in get_visitors_count: ", error)
         return None
