@@ -18,8 +18,8 @@ from postgress.common import (
 )
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret'
-app.config['CORS_HEADERS'] = 'Content-Type'
+app.config["SECRET_KEY"] = "secret"
+app.config["CORS_HEADERS"] = "Content-Type"
 CORS(app)
 
 connection_pool = None
@@ -126,7 +126,12 @@ def get_product_values():
     if product_id is None:
         return jsonify({"message": Message.PRODUCT_ID_REQUIRED.value}), 400
 
-    if not validate_date(start_date) or not validate_date(end_date):
+    if (
+        not start_date
+        or not validate_date(start_date)
+        or not end_date
+        or not validate_date(end_date)
+    ):
         return jsonify({"message": Message.INVALID_DATE_FORMAT.value}), 400
 
     try:
