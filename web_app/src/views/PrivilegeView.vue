@@ -1,22 +1,15 @@
 <script setup>
-import Stepper from "primevue/stepper";
-import StepList from "primevue/steplist";
-import StepPanels from "primevue/steppanels";
-import StepItem from "primevue/stepitem";
-import Step from "primevue/step";
-import StepPanel from "primevue/steppanel";
-import Button from "primevue/button";
-
-import Tabs from 'primevue/tabs';
-import TabList from 'primevue/tablist';
-import Tab from 'primevue/tab';
-import TabPanels from 'primevue/tabpanels';
-import TabPanel from 'primevue/tabpanel';
+import Tabs from "primevue/tabs";
+import TabList from "primevue/tablist";
+import Tab from "primevue/tab";
+import TabPanels from "primevue/tabpanels";
+import TabPanel from "primevue/tabpanel";
 import Toolbar from "primevue/toolbar";
-import Badge from 'primevue/badge';
+import Badge from "primevue/badge";
 import Dialog from "primevue/dialog";
 import InputNumber from "primevue/inputnumber";
 import InputText from "primevue/inputtext";
+import Button from "primevue/button";
 
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 
@@ -27,7 +20,7 @@ import { usePrimeVue } from "primevue/config";
 const toast = useToast();
 const primevue = usePrimeVue();
 const languageConfig = primevue.config.locale;
-const toastConfig = languageConfig.toast
+const toastConfig = languageConfig.toast;
 
 const product = ref({});
 const productDialog = ref(false);
@@ -74,7 +67,9 @@ const confirmDeleteProduct = (prod) => {
   deleteProductDialog.value = true;
 };
 const deleteProduct = () => {
-  privilegeLevels.value = privilegeLevels.value.filter((val) => val.label !== product.value.label);
+  privilegeLevels.value = privilegeLevels.value.filter(
+    (val) => val.label !== product.value.label
+  );
   deleteProductDialog.value = false;
   product.value = {};
   toast.add({
@@ -105,8 +100,11 @@ const saveProduct = () => {
 
   if (product?.value.label?.trim()) {
     if (product.value.label) {
-      console.log("=====================     1     ===========================");
-      privilegeLevels.value[findIndexByLabel(product.value.label)] = product.value;
+      console.log(
+        "=====================     1     ==========================="
+      );
+      privilegeLevels.value[findIndexByLabel(product.value.label)] =
+        product.value;
       toast.add({
         severity: toastConfig.severity.success,
         summary: toastConfig.summary.successTitle,
@@ -134,37 +132,59 @@ const saveProduct = () => {
     <SectionHeaderInfo title="Привилегии" />
 
     <Toolbar class="mb-4">
-        <template #start>
-          <Button
-            :label="languageConfig.addTitle"
-            icon="pi pi-plus"
-            class="mr-2"
-            @click="openNew"
-            outlined
-          />
-        </template>
-      </Toolbar>
+      <template #start>
+        <Button
+          :label="languageConfig.addTitle"
+          icon="pi pi-plus"
+          class="mr-2"
+          @click="openNew"
+          outlined
+        />
+      </template>
+    </Toolbar>
 
     <div class="border-round-lg overflow-hidden shadow-1">
       <Tabs :value="0" scrollable>
         <TabList>
-            <Tab v-for="(tab, index) in privilegeLevels" :key="tab.label" :value="index">
-                <Badge :value="index + 1"></Badge>
-                {{ tab.label }}
-            </Tab>
+          <Tab
+            v-for="(tab, index) in privilegeLevels"
+            :key="tab.label"
+            :value="index"
+          >
+            <Badge :value="index + 1"></Badge>
+            {{ tab.label }}
+          </Tab>
         </TabList>
         <TabPanels>
-            <TabPanel v-for="(tab, index) in privilegeLevels" :key="tab.sale" :value="index">
-                <div class="p-2">
-                  <p class="m-0">Скидка на все товары: {{ tab.sale.all }}</p>
-                  <p class="m-0">Порог входа: {{ tab.starts_from }}</p>
-                </div>
+          <TabPanel
+            v-for="(tab, index) in privilegeLevels"
+            :key="tab.sale"
+            :value="index"
+          >
+            <div class="p-2">
+              <p class="m-0">Скидка на все товары: {{ tab.sale.all }}</p>
+              <p class="m-0">Порог входа: {{ tab.starts_from }}</p>
+            </div>
 
-                <div class="flex mt-3 gap-2">
-                    <Button :label="languageConfig.editTitle" @click="editProduct(tab)" outlined icon="pi pi-pencil" severity="secondary" size="small"/>
-                    <Button :label="languageConfig.deleteTitle" @click="confirmDeleteProduct(tab)" outlined icon="pi pi-trash" severity="danger" size="small" />
-                </div>
-            </TabPanel>
+            <div class="flex mt-3 gap-2">
+              <Button
+                :label="languageConfig.editTitle"
+                @click="editProduct(tab)"
+                outlined
+                icon="pi pi-pencil"
+                severity="secondary"
+                size="small"
+              />
+              <Button
+                :label="languageConfig.deleteTitle"
+                @click="confirmDeleteProduct(tab)"
+                outlined
+                icon="pi pi-trash"
+                severity="danger"
+                size="small"
+              />
+            </div>
+          </TabPanel>
         </TabPanels>
       </Tabs>
     </div>
@@ -189,7 +209,11 @@ const saveProduct = () => {
           text
           @click="deleteProductDialog = false"
         />
-        <Button :label="languageConfig.accept" icon="pi pi-check" @click="deleteProduct" />
+        <Button
+          :label="languageConfig.accept"
+          icon="pi pi-check"
+          @click="deleteProduct"
+        />
       </template>
     </Dialog>
 
@@ -244,7 +268,12 @@ const saveProduct = () => {
       </div>
 
       <template #footer>
-        <Button :label="languageConfig.cancelTitle" icon="pi pi-times" text @click="hideDialog" />
+        <Button
+          :label="languageConfig.cancelTitle"
+          icon="pi pi-times"
+          text
+          @click="hideDialog"
+        />
         <Button
           :label="productDialogText"
           icon="pi pi-check"
@@ -252,6 +281,5 @@ const saveProduct = () => {
         />
       </template>
     </Dialog>
-
   </div>
 </template>

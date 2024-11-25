@@ -75,11 +75,11 @@ const { width, height } = useBreakpoints();
   <Toast />
   <div v-if="width < menuExpandWidth" class="container">
     <header
-      class="header p-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
+      class="header p-3 px-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
     >
       <div class="">
         <img
-          class="block w-2"
+          class="block w-2rem"
           src="./assets/logo.png"
           alt="Система лояльности"
         />
@@ -211,7 +211,7 @@ const { width, height } = useBreakpoints();
 
 <style scoped>
 .fadeIn-enter-active,
-.fadeIn-leave-active{
+.fadeIn-leave-active {
   transition: all 350ms cubic-bezier(0.665, 1.16, 0.77, 0.985);
 }
 

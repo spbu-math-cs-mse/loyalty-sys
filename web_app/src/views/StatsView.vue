@@ -138,22 +138,13 @@ onMounted(() => {
   axios
     .all([
       axios.get("http://84.201.143.213:5000/data/total_purchases", {
-        params: {
-          start_date: fetchDate.value.start,
-          end_date: fetchDate.value.end,
-        },
+        params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/average_check", {
-        params: {
-          start_date: fetchDate.value.start,
-          end_date: fetchDate.value.end,
-        },
+        params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/visitor_count", {
-        params: {
-          start_date: fetchDate.value.start,
-          end_date: fetchDate.value.end,
-        },
+        params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/products"),
     ])
@@ -291,7 +282,7 @@ const setChartLineData = () => {
           borderColor: color[i],
           borderWidth: 2,
           fill: false,
-        })
+        });
       })
       .catch((error) => {
         console.log(error);
@@ -445,7 +436,7 @@ const toast = useToast();
             <AutoComplete
               name="selectedProductList"
               v-model="selectedProductList"
-              autoOptionFocus="true"
+              :autoOptionFocus="true"
               optionLabel="label"
               inputId="products_multiple"
               :placeholder="selectedProductList.length === 0 ? 'Товар' : ''"
@@ -471,7 +462,7 @@ const toast = useToast();
               :maxDate="productMaxDate"
               showButtonBar
               showIcon
-              showOtherMonths="false"
+              :showOtherMonths="false"
               class="max-w-12rem"
             />
           </div>

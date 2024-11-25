@@ -7,7 +7,7 @@ const routes = [
     name: "home",
     component: HomeView,
     meta: {
-      title: 'Главная',
+      title: "Главная",
     },
   },
   {
@@ -15,7 +15,7 @@ const routes = [
     name: "stats",
     component: () => import("../views/StatsView.vue"),
     meta: {
-      title: 'Cтатистика',
+      title: "Cтатистика",
     },
   },
   {
@@ -23,7 +23,7 @@ const routes = [
     name: "coupons",
     component: () => import("../views/CouponsView.vue"),
     meta: {
-      title: 'Купоны',
+      title: "Купоны",
     },
   },
   {
@@ -31,7 +31,7 @@ const routes = [
     name: "privilege",
     component: () => import("../views/PrivilegeView.vue"),
     meta: {
-      title: 'Привилегии',
+      title: "Привилегии",
     },
   },
   {
@@ -39,7 +39,7 @@ const routes = [
     name: "settings",
     component: () => import("../views/SettingsView.vue"),
     meta: {
-      title: 'Настройки',
+      title: "Настройки",
     },
   },
   {
@@ -47,7 +47,7 @@ const routes = [
     name: "notfound",
     component: () => import("../views/PageNotFound.vue"),
     meta: {
-      title: '404 Страница не найдена',
+      title: "404 Страница не найдена",
     },
   },
   {
@@ -56,7 +56,7 @@ const routes = [
     redirect: { name: "notfound" },
     // component: () => import("../views/SalesView.vue"),
     meta: {
-      title: 'Скидки',
+      title: "Скидки",
     },
   },
   {
