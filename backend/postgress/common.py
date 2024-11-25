@@ -236,15 +236,16 @@ def get_product_statistic(connection, product_id, start_date, end_date):
             params.append(to_db_readable_date(end_date))
 
         cursor.execute(base_query, tuple(params))
-        month, total_quality = cursor.fetchall()
+
+        qualities = [total_quality for month, total_quality in cursor.fetchall()]
 
         find_product_query = sql.SQL("SELECT * FROM products WHERE id = %s;")
 
         cursor.execute(find_product_query, (product_id,))
 
         id, label, price = cursor.fetchone()
-        return total_quality, label
 
+        return qualities, label
     except Exception as error:
         print("Error in get_product_statistic: ", error)
         return None
@@ -279,7 +280,9 @@ def get_purchases_count(connection, start_date, end_date):
 
         cursor.execute(base_query, tuple(params))
 
-        return cursor.fetchone()
+        # fetchone returns row with 1 element
+        purchases_count = cursor.fetchone()[0]
+        return purchases_count
     except Exception as error:
         print("Error in get_purchases_count: ", error)
         return None
@@ -325,7 +328,10 @@ def get_average_purchase(connection, start_date, end_date):
 
         cursor.execute(result, tuple(params))
 
-        return cursor.fetchone()
+        # fetchone returns row with 1 element
+        average_check = cursor.fetchone()[0]
+
+        return average_check
     except Exception as error:
         print("Error in get_average_purchase: ", error)
         return None
@@ -360,7 +366,9 @@ def get_visits_count(connection, start_date, end_date):
 
         cursor.execute(base_query, tuple(params))
 
-        return cursor.fetchone()
+        # fetchone returns row with 1 element
+        users_count = cursor.fetchone()[0]
+        return users_count
     except Exception as error:
         print("Error in get_visitors_count: ", error)
         return None

@@ -52,7 +52,7 @@ POST /user/[user_id]/purchase
 ```json
 {
   "message": "Purchases recorded",
-  "user_id": 12345
+  "purchase_id": 1
 }
 ```
 
