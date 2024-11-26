@@ -62,7 +62,6 @@ const settings = reactive({
         sale: {
           all: 0.5,
         },
-        saleAll: 0.5,
         starts_from: 0,
       },
     ],

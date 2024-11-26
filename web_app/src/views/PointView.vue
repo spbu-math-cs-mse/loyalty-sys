@@ -51,6 +51,7 @@ const cancelSettingsChanges = () => {
   Object.assign(editableSettings, settings.value);
 };
 
+// TODO: create global createId function
 const createId = () => {
   let id = "";
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -61,10 +62,21 @@ const createId = () => {
 };
 
 const openNew = () => {
-  productDialogText.value = languageConfig.addTitle;
-  product.value = {};
-  submitted.value = false;
-  productDialog.value = true;
+  if (privilegeLevels.value.length < settings.value.levels) {
+    productDialogText.value = languageConfig.addTitle;
+    product.value = {
+      sale: {},
+    };
+    submitted.value = false;
+    productDialog.value = true;
+  } else {
+    toast.add({
+      severity: toastConfig.severity.error,
+      summary: toastConfig.summary.error,
+      detail: toastConfig.detail.privillege.max,
+      life: 3000,
+    });
+  }
 };
 
 const hideDialog = () => {
@@ -99,13 +111,16 @@ const saveProduct = () => {
     }
 
     productDialog.value = false;
-    product.value = {};
+    product.value = {
+      sale: {},
+    };
   }
 };
 
 const editPrivilege = (privilege) => {
   productDialogText.value = languageConfig.editTitle;
-  product.value = { ...privilege };
+  // TODO: Maybe should use deepClone instead of JSON
+  product.value = JSON.parse(JSON.stringify(privilege));
   productDialog.value = true;
 };
 
@@ -261,7 +276,7 @@ watch(
             >Баллы со всеx товаров</label
           >
           <InputNumber
-            v-model="product.saleAll"
+            v-model="product.sale.all"
             inputId="saleAll"
             mode="decimal"
             suffix="%"

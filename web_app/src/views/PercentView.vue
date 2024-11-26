@@ -51,6 +51,7 @@ const cancelSettingsChanges = () => {
   Object.assign(editableSettings, settings.value);
 };
 
+// TODO: create global createId function
 const createId = () => {
   let id = "";
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -118,7 +119,7 @@ const saveProduct = () => {
 
 const editPrivilege = (privilege) => {
   productDialogText.value = languageConfig.editTitle;
-  // Maybe should use deepClone instead of JSON
+  // TODO: Maybe should use deepClone instead of JSON
   product.value = JSON.parse(JSON.stringify(privilege));
   productDialog.value = true;
 };
