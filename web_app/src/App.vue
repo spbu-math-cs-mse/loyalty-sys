@@ -29,13 +29,13 @@ const menuItems = ref([
     route: "/privilege",
     command: () => closeMenu(),
   },
-  {
-    label: "Настройки",
-    icon: "pi pi-cog",
-    route: "/settings",
-    command: () => closeMenu(),
-  },
   // Allowed comments, will be needed later
+  // {
+  //   label: "Настройки",
+  //   icon: "pi pi-cog",
+  //   route: "/settings",
+  //   command: () => closeMenu(),
+  // },
   // {
   //   label: "Купоны",
   //   icon: "pi pi-tag",
@@ -93,9 +93,9 @@ const { width, height } = useBreakpoints();
         <Drawer
           v-model:visible="mobileMenuFixed"
           header="Меню"
-          blockScroll="true"
+          :blockScroll="true"
           :closeButtonProps="{
-            severity: secondary,
+            severity: 'secondary',
             text: true,
             rounded: false,
           }"
@@ -109,7 +109,6 @@ const { width, height } = useBreakpoints();
                 custom
               >
                 <a
-                  v-ripple
                   :href="href"
                   v-bind="props.action"
                   @click="navigate"
@@ -120,7 +119,6 @@ const { width, height } = useBreakpoints();
               </router-link>
               <a
                 v-else
-                v-ripple
                 :href="item.url"
                 :target="item.target"
                 v-bind="props.action"
@@ -176,7 +174,6 @@ const { width, height } = useBreakpoints();
           custom
         >
           <a
-            v-ripple
             :href="href"
             v-bind="props.action"
             @click="navigate"
@@ -190,7 +187,6 @@ const { width, height } = useBreakpoints();
         </router-link>
         <a
           v-else
-          v-ripple
           :href="item.url"
           :target="item.target"
           v-bind="props.action"

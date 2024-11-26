@@ -1,6 +1,6 @@
-import { ref } from "vue";
+import { reactive } from "vue";
 
-const settings = ref({
+const settings = reactive({
   point: {
     active: false,
     levels: 5,
@@ -41,4 +41,4 @@ function getSettings(key) {
   return key ? settings.value[key] : settings.value;
 }
 
-export { settings, deepEqual, updateSettings, getSettings };
+export { deepEqual, updateSettings, getSettings };

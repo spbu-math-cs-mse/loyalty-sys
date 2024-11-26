@@ -11,6 +11,7 @@ import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
 import AutoComplete from "primevue/autocomplete";
+import Step from "primevue/step";
 
 const axios = require("axios");
 const primevue = usePrimeVue();
@@ -52,7 +53,7 @@ const searchProduct = (event) => {
     filteredProductList.value = [...productList.value];
   } else {
     filteredProductList.value = productList.value.filter((product) => {
-      return product.name.toLowerCase().startsWith(event.query.toLowerCase());
+      return product.label.toLowerCase().startsWith(event.query.toLowerCase());
     });
   }
 };
@@ -176,7 +177,7 @@ const chartDoughnutConfig = ref();
 
 const chartLineOptions = ref();
 const chartLineConfig = ref();
-const chartLineData = ref();
+const chartLineData = ref({});
 const flag = ref(1);
 
 const setChartConfigDoughnut = () => {
@@ -270,8 +271,8 @@ const setChartLineData = () => {
       .get("http://84.201.143.213:5000/data/values", {
         params: {
           product_id: selectedProductList.value[i].id,
-          start_date: productDates.value[0],
-          end_date: productDates.value[1],
+          start_date: productDates.value[0].toISOString().substring(0, 7),
+          end_date: productDates.value[1].toISOString().substring(0, 7),
         },
       })
       .then((response) => {
@@ -301,6 +302,7 @@ const setChartOptionsLine = () => {
 
   const a = setChartOptionsDoughnut();
   a.plugins.title.display = false;
+  a.layout.padding.left = 0;
   a.scales = {
     x: {
       ticks: {
@@ -311,6 +313,7 @@ const setChartOptionsLine = () => {
       },
     },
     y: {
+      min: 0,
       ticks: {
         color: textColorSecondary,
       },
@@ -431,7 +434,7 @@ const toast = useToast();
         >
           <div class="flex flex-wrap gap-2 align-items-center">
             <label for="products_multiple" class="widget__title"
-              >Статистика товара</label
+              >Продажи</label
             >
             <AutoComplete
               name="selectedProductList"
@@ -449,7 +452,6 @@ const toast = useToast();
             />
           </div>
           <div class="flex flex-wrap gap-2 align-items-center">
-            <label for="products_range" class="widget__title">За</label>
             <DatePicker
               v-model="productDates"
               view="month"
@@ -464,6 +466,7 @@ const toast = useToast();
               showIcon
               :showOtherMonths="false"
               class="max-w-12rem"
+              placeholder="Период"
             />
           </div>
           <Button type="submit" severity="secondary" label="Показать" />
