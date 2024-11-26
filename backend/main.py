@@ -38,7 +38,71 @@ def validate_date(date_str: str) -> bool:
         return True
     except ValueError:
         return False
+# TODO: Structurize and store in the database in parts, not in whole
+'''
+privileges JSON example:
+{
+  percent: {
+    settings: {
+      active: false,
+      levels: 5,
+    },
+    privileges: [
+      {
+        id: "AS765HGJAL",
+        label: "Bronze",
+        sale: {
+          all: 5,
+        },
+        starts_from: 0,
+      },
+      {
+        id: "AS76AHGJAL",
+        label: "Silver",
+        sale: {
+          all: 15,
+        },
+        starts_from: 2000,
+      },
+      {
+        id: "BS765HGJAL",
+        label: "Golden",
+        sale: {
+          all: 25,
+        },
+        starts_from: 5000,
+      },
+    ],
+  },
+  point: {
+    settings: {
+      active: false,
+      levels: 15,
+    },
+    privileges: [
+      {
+        id: "1S765HGJAL",
+        label: "Bronze",
+        sale: {
+          all: 0.5,
+        },
+        starts_from: 0,
+      },
+    ],
+  },
+}
+'''
 
+@app.route("/privileges", methods=["GET"])
+def get_privileges():
+    privileges = {}  # TODO: implement database function
+    return jsonify(discount), 200
+
+
+@app.route("/privileges", methods=["POST"])
+def send_privileges():
+    data = request.json  # TODO: implement database function
+    return jsonify({"message": "Feedback"}), 200
 
 @app.route("/user", methods=["POST"])
 def create_user():
