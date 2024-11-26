@@ -14,4 +14,8 @@ class Message(Enum):
     PRODUCT_ID_REQUIRED = "Product id is required"
     DB_ERROR = "DB error"
     GENDER_REQUIRED = "Gender is required"
+    INVALID_GENDER = "Gender is invalid"
     GENDER_UPDATED = "Gender updated successfully"
+    DISCOUNT_UPDATED = "Discount updated successfully"
+    INVALID_DISCOUNT = "Couldn't set this discount"
+    NO_DISCOUNT = "No discount id"
