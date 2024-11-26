@@ -108,11 +108,7 @@ const { width, height } = useBreakpoints();
                 :to="item.route"
                 custom
               >
-                <a
-                  :href="href"
-                  v-bind="props.action"
-                  @click="navigate"
-                >
+                <a :href="href" v-bind="props.action" @click="navigate">
                   <span class="text-xl" :class="item.icon" />
                   <span class="ml-2">{{ item.label }}</span>
                 </a>
@@ -185,12 +181,7 @@ const { width, height } = useBreakpoints();
             <span v-if="desktopMenuFixed" class="ml-2">{{ item.label }}</span>
           </a>
         </router-link>
-        <a
-          v-else
-          :href="item.url"
-          :target="item.target"
-          v-bind="props.action"
-        >
+        <a v-else :href="item.url" :target="item.target" v-bind="props.action">
           <span class="text-lg" :class="item.icon" />
           <span class="ml-2">{{ item.label }}</span>
         </a>

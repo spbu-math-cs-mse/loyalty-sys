@@ -1,5 +1,5 @@
 <script setup>
-import { ref, shallowReactive, watch, reactive, computed, readonly } from "vue";
+import { ref, watch, reactive, computed } from "vue";
 import { usePrimeVue } from "primevue/config";
 import { useToast } from "primevue/usetoast";
 import { deepEqual } from "@/settings";
@@ -23,7 +23,6 @@ const props = defineProps({
     required: true,
   },
 });
-
 
 const toast = useToast();
 const primevue = usePrimeVue();
@@ -63,9 +62,7 @@ const createId = () => {
 
 const openNew = () => {
   productDialogText.value = languageConfig.addTitle;
-  product.value = {
-    sale:{}
-  };
+  product.value = {};
   submitted.value = false;
   productDialog.value = true;
 };
@@ -80,7 +77,9 @@ const saveProduct = () => {
 
   if (product?.value.label?.trim()) {
     if (product.value.id) {
-      const index = privilegeLevels.value.findIndex(privilege => privilege.id === product.value.id);
+      const index = privilegeLevels.value.findIndex(
+        (privilege) => privilege.id === product.value.id
+      );
       privilegeLevels.value[index] = product.value;
       toast.add({
         severity: toastConfig.severity.success,
@@ -100,9 +99,7 @@ const saveProduct = () => {
     }
 
     productDialog.value = false;
-    product.value = {
-      sale:{}
-    };
+    product.value = {};
   }
 };
 
@@ -155,7 +152,7 @@ watch(
             :value="index"
           >
             <div class="py-2 md:p-2">
-              <p class="m-0">Скидка на все товары: {{ tab.sale.all }}</p>
+              <p class="m-0">Скидка на все товары: {{ tab.saleAll }}</p>
               <p class="m-0">Порог входа: {{ tab.starts_from }}</p>
             </div>
 
@@ -186,17 +183,27 @@ watch(
       <h3 class="text-2xl mb-2 font-medium">Настройки</h3>
 
       <div class="md:px-2">
-        <div class="flex flex-wrap align-items-center justify-content-between mb-2">
+        <div
+          class="flex flex-wrap align-items-center justify-content-between mb-2"
+        >
           <label
             for="percent_checked"
             class="settings__title font-normal md:text-lg"
             >Включить программу</label
           >
-          <ToggleSwitch inputId="percent_checked" class="switch" v-model="editableSettings.active" />
+          <ToggleSwitch
+            inputId="percent_checked"
+            class="switch"
+            v-model="editableSettings.active"
+          />
         </div>
-    
-        <div class="flex flex-wrap align-items-center justify-content-between mb-2">
-          <label for="percent_levels" class="settings__title font-normal md:text-lg"
+
+        <div
+          class="flex flex-wrap align-items-center justify-content-between mb-2"
+        >
+          <label
+            for="percent_levels"
+            class="settings__title font-normal md:text-lg"
             >Уровни привилегий</label
           >
           <InputNumber
@@ -206,9 +213,10 @@ watch(
             showButtons
             :min="0"
             :max="20"
+            :step="1"
           />
         </div>
-    
+
         <div class="flex justify-content-end align-items-center gap-2 mt-4">
           <Button
             :label="languageConfig.saveTitle"
@@ -216,8 +224,8 @@ watch(
             @click="saveSettings"
             :disabled="isModified"
             :outlined="isModified"
-            />
-            <Button
+          />
+          <Button
             :label="languageConfig.cancel"
             severity="danger"
             @click="cancelSettingsChanges"
@@ -253,7 +261,7 @@ watch(
             >Cкидка на все товары</label
           >
           <InputNumber
-            v-model="product.sale.all"
+            v-model="product.saleAll"
             inputId="saleAll"
             mode="decimal"
             suffix="%"
@@ -294,6 +302,5 @@ watch(
         />
       </template>
     </Dialog>
-
   </div>
 </template>

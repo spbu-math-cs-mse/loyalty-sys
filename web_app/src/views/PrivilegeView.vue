@@ -1,41 +1,27 @@
 <script setup>
-import Tabs from "primevue/tabs";
-import TabList from "primevue/tablist";
-import Tab from "primevue/tab";
-import TabPanels from "primevue/tabpanels";
-import TabPanel from "primevue/tabpanel";
+import { ref, reactive } from "vue";
+import { usePrimeVue } from "primevue/config";
+
 import Toolbar from "primevue/toolbar";
-import Badge from "primevue/badge";
 import Dialog from "primevue/dialog";
-import InputNumber from "primevue/inputnumber";
-import InputText from "primevue/inputtext";
 import Button from "primevue/button";
 
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 import PercentView from "./PercentView.vue";
 import PointView from "./PointView.vue";
 
-import { ref, reactive } from "vue";
-import { useToast } from "primevue/usetoast";
-import { usePrimeVue } from "primevue/config";
-
-const toast = useToast();
 const primevue = usePrimeVue();
 const languageConfig = primevue.config.locale;
-const toastConfig = languageConfig.toast;
 
 const product = ref({});
-const productDialog = ref(false);
 const settingsEmitObj = ref();
-const submitted = ref(false);
-const productDialogText = ref();
 const deleteProductDialog = ref(false);
 
 const settings = reactive({
   percent: {
     settings: {
       active: false,
-      levels: 5
+      levels: 5,
     },
     privileges: [
       {
@@ -44,6 +30,7 @@ const settings = reactive({
         sale: {
           all: 5,
         },
+        saleAll: 0.5,
         starts_from: 0,
       },
       {
@@ -52,6 +39,7 @@ const settings = reactive({
         sale: {
           all: 15,
         },
+        saleAll: 0.5,
         starts_from: 2000,
       },
       {
@@ -60,6 +48,7 @@ const settings = reactive({
         sale: {
           all: 25,
         },
+        saleAll: 0.5,
         starts_from: 5000,
       },
     ],
@@ -67,7 +56,7 @@ const settings = reactive({
   point: {
     settings: {
       active: false,
-      levels: 15
+      levels: 15,
     },
     privileges: [
       {
@@ -76,8 +65,9 @@ const settings = reactive({
         sale: {
           all: 0.5,
         },
+        saleAll: 0.5,
         starts_from: 0,
-      }
+      },
     ],
   },
 });
@@ -103,10 +93,11 @@ const confirmDeletePrivilege = (data) => {
 };
 
 const deletePrivilege = () => {
-  settings[settingsEmitObj.value].privileges = settings[settingsEmitObj.value].privileges.filter((items) => items.label !== product.value.label);
+  settings[settingsEmitObj.value].privileges = settings[
+    settingsEmitObj.value
+  ].privileges.filter((items) => items.label !== product.value.label);
   deleteProductDialog.value = false;
-}
-
+};
 </script>
 
 <template>
@@ -165,25 +156,24 @@ const deletePrivilege = () => {
         />
       </template>
     </Dialog>
-
   </div>
 </template>
 
 <style scoped>
-.settings__component /deep/ .settings__title {
+.settings__component :deep(.settings__title) {
   color: var(--p-text-color);
 }
 
-.settings__component /deep/ .p-inputtext {
+.settings__component :deep(.p-inputtext) {
   max-width: 6rem;
 }
 
 @media screen and (max-width: 767px) {
-  .settings__component /deep/ .switch {
+  .settings__component :deep(.switch) {
     transform: scale(0.9);
   }
 
-  .settings__component /deep/ .p-inputtext{
+  .settings__component :deep(.p-inputtext) {
     font-size: 0.85rem;
   }
 }

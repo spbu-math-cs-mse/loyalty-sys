@@ -11,7 +11,6 @@ import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
 import AutoComplete from "primevue/autocomplete";
-import Step from "primevue/step";
 
 const axios = require("axios");
 const primevue = usePrimeVue();
@@ -433,9 +432,7 @@ const toast = useToast();
           class="flex flex-wrap align-items-center gap-3 mb-3"
         >
           <div class="flex flex-wrap gap-2 align-items-center">
-            <label for="products_multiple" class="widget__title"
-              >Продажи</label
-            >
+            <label for="products_multiple" class="widget__title">Продажи</label>
             <AutoComplete
               name="selectedProductList"
               v-model="selectedProductList"
