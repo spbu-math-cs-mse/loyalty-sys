@@ -118,6 +118,7 @@ const saveProduct = () => {
 
 const editPrivilege = (privilege) => {
   productDialogText.value = languageConfig.editTitle;
+  // Maybe should use deepClone instead of JSON
   product.value = JSON.parse(JSON.stringify(privilege));
   productDialog.value = true;
 };
