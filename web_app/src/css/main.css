@@ -54,11 +54,16 @@ body{
 }
 
 .toggle__switch{
-    transform: scale(0.85);
+    transform: scale(0.8);
 }
 
 .logo{
     max-width: 40px;
     width: 100%;
     margin: 0 auto;
+}
+
+.container__wrapper{
+    container: container/inline-size;
+    max-width: 1920px;
 }

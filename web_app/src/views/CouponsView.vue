@@ -10,9 +10,6 @@ import Toolbar from "primevue/toolbar";
 import IconField from "primevue/iconfield";
 import InputIcon from "primevue/inputicon";
 import InputText from "primevue/inputtext";
-import Textarea from "primevue/textarea";
-import RadioButton from "primevue/radiobutton";
-import Checkbox from "primevue/checkbox";
 import InputNumber from "primevue/inputnumber";
 import Select from "primevue/select";
 import Column from "primevue/column";
@@ -218,6 +215,7 @@ products.value = [
         <template #start>
           <Button
             :label="languageConfig.addTitle"
+            outlined
             icon="pi pi-plus"
             class="mr-2"
             @click="openNew"

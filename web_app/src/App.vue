@@ -3,7 +3,7 @@ import Menu from "primevue/menu";
 import Button from "primevue/button";
 import Drawer from "primevue/drawer";
 import Toast from "primevue/toast";
-import ToggleSwitch from "primevue/toggleswitch";
+import ToggleButton from "primevue/togglebutton";
 
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
@@ -30,6 +30,12 @@ const menuItems = ref([
     command: () => closeMenu(),
   },
   // Allowed comments, will be needed later
+  // {
+  //   label: "Настройки",
+  //   icon: "pi pi-cog",
+  //   route: "/settings",
+  //   command: () => closeMenu(),
+  // },
   // {
   //   label: "Купоны",
   //   icon: "pi pi-tag",
@@ -69,11 +75,11 @@ const { width, height } = useBreakpoints();
   <Toast />
   <div v-if="width < menuExpandWidth" class="container">
     <header
-      class="header p-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
+      class="header p-3 px-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
     >
       <div class="">
         <img
-          class="block w-2"
+          class="block w-2rem"
           src="./assets/logo.png"
           alt="Система лояльности"
         />
@@ -87,9 +93,9 @@ const { width, height } = useBreakpoints();
         <Drawer
           v-model:visible="mobileMenuFixed"
           header="Меню"
-          blockScroll="true"
+          :blockScroll="true"
           :closeButtonProps="{
-            severity: secondary,
+            severity: 'secondary',
             text: true,
             rounded: false,
           }"
@@ -102,19 +108,13 @@ const { width, height } = useBreakpoints();
                 :to="item.route"
                 custom
               >
-                <a
-                  v-ripple
-                  :href="href"
-                  v-bind="props.action"
-                  @click="navigate"
-                >
+                <a :href="href" v-bind="props.action" @click="navigate">
                   <span class="text-xl" :class="item.icon" />
                   <span class="ml-2">{{ item.label }}</span>
                 </a>
               </router-link>
               <a
                 v-else
-                v-ripple
                 :href="item.url"
                 :target="item.target"
                 v-bind="props.action"
@@ -133,7 +133,7 @@ const { width, height } = useBreakpoints();
     <Menu
       v-if="width >= menuExpandWidth"
       :model="menuItems"
-      class="aside overflow-scroll sticky top-0 p-2 top-0 animate-duration-500 shadow-1 border-none"
+      class="aside overflow-scroll sticky p-2 top-0 fadeinleft animation-ease-out animation-duration-400 shadow-1 border-none"
       :class="{ 'min-w-min': !desktopMenuFixed }"
     >
       <template #start>
@@ -145,16 +145,16 @@ const { width, height } = useBreakpoints();
             'justify-content-center': !desktopMenuFixed,
           }"
         >
-          <ToggleSwitch v-model="desktopMenuFixed" class="toggle__switch">
-            <template #handle="{ checked }">
-              <i
-                :class="[
-                  'text-xs pi',
-                  { 'pi-lock': checked, 'pi-lock-open': !checked },
-                ]"
-              />
-            </template>
-          </ToggleSwitch>
+          <ToggleButton
+            v-model="desktopMenuFixed"
+            onLabel=" "
+            offLabel=" "
+            onIcon="pi pi-arrow-left"
+            size="small"
+            offIcon="pi pi-arrow-right"
+            class="toggle__switch"
+            aria-label="Do you confirm"
+          />
         </div>
         <img
           class="logo block mb-1 mt-2"
@@ -170,7 +170,6 @@ const { width, height } = useBreakpoints();
           custom
         >
           <a
-            v-ripple
             :href="href"
             v-bind="props.action"
             @click="navigate"
@@ -182,13 +181,7 @@ const { width, height } = useBreakpoints();
             <span v-if="desktopMenuFixed" class="ml-2">{{ item.label }}</span>
           </a>
         </router-link>
-        <a
-          v-else
-          v-ripple
-          :href="item.url"
-          :target="item.target"
-          v-bind="props.action"
-        >
+        <a v-else :href="item.url" :target="item.target" v-bind="props.action">
           <span class="text-lg" :class="item.icon" />
           <span class="ml-2">{{ item.label }}</span>
         </a>
@@ -196,7 +189,7 @@ const { width, height } = useBreakpoints();
     </Menu>
 
     <div class="p-2 w-full">
-      <Transition name="fade">
+      <Transition name="fadeIn">
         <router-view />
       </Transition>
     </div>
@@ -204,13 +197,14 @@ const { width, height } = useBreakpoints();
 </template>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 350ms cubic-bezier(0.665, 1.16, 0.77, 0.985);
+.fadeIn-enter-active,
+.fadeIn-leave-active {
+  transition: all 350ms cubic-bezier(0.665, 1.16, 0.77, 0.985);
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.fadeIn-enter-from,
+.fadeIn-leave-to {
   opacity: 0;
+  transform: translateY(5px);
 }
 </style>

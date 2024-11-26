@@ -52,7 +52,7 @@ const searchProduct = (event) => {
     filteredProductList.value = [...productList.value];
   } else {
     filteredProductList.value = productList.value.filter((product) => {
-      return product.name.toLowerCase().startsWith(event.query.toLowerCase());
+      return product.label.toLowerCase().startsWith(event.query.toLowerCase());
     });
   }
 };
@@ -138,22 +138,13 @@ onMounted(() => {
   axios
     .all([
       axios.get("http://84.201.143.213:5000/data/total_purchases", {
-        params: {
-          start_date: fetchDate.value.start,
-          end_date: fetchDate.value.end,
-        },
+        params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/average_check", {
-        params: {
-          start_date: fetchDate.value.start,
-          end_date: fetchDate.value.end,
-        },
+        params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/visitor_count", {
-        params: {
-          start_date: fetchDate.value.start,
-          end_date: fetchDate.value.end,
-        },
+        params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/products"),
     ])
@@ -185,7 +176,7 @@ const chartDoughnutConfig = ref();
 
 const chartLineOptions = ref();
 const chartLineConfig = ref();
-const chartLineData = ref();
+const chartLineData = ref({});
 const flag = ref(1);
 
 const setChartConfigDoughnut = () => {
@@ -279,8 +270,8 @@ const setChartLineData = () => {
       .get("http://84.201.143.213:5000/data/values", {
         params: {
           product_id: selectedProductList.value[i].id,
-          start_date: productDates.value[0],
-          end_date: productDates.value[1],
+          start_date: productDates.value[0].toISOString().substring(0, 7),
+          end_date: productDates.value[1].toISOString().substring(0, 7),
         },
       })
       .then((response) => {
@@ -291,7 +282,7 @@ const setChartLineData = () => {
           borderColor: color[i],
           borderWidth: 2,
           fill: false,
-        })
+        });
       })
       .catch((error) => {
         console.log(error);
@@ -310,6 +301,7 @@ const setChartOptionsLine = () => {
 
   const a = setChartOptionsDoughnut();
   a.plugins.title.display = false;
+  a.layout.padding.left = 0;
   a.scales = {
     x: {
       ticks: {
@@ -320,6 +312,7 @@ const setChartOptionsLine = () => {
       },
     },
     y: {
+      min: 0,
       ticks: {
         color: textColorSecondary,
       },
@@ -394,7 +387,7 @@ const toast = useToast();
 </script>
 
 <template>
-  <div class="stats lg:py-4 py-1 md:pl-3 pl-0">
+  <div class="stats container__wrapper lg:py-4 py-1 md:pl-3 pl-0">
     <SectionHeaderInfo title="Статистика" />
 
     <div
@@ -439,13 +432,11 @@ const toast = useToast();
           class="flex flex-wrap align-items-center gap-3 mb-3"
         >
           <div class="flex flex-wrap gap-2 align-items-center">
-            <label for="products_multiple" class="widget__title"
-              >Статистика товара</label
-            >
+            <label for="products_multiple" class="widget__title">Продажи</label>
             <AutoComplete
               name="selectedProductList"
               v-model="selectedProductList"
-              autoOptionFocus="true"
+              :autoOptionFocus="true"
               optionLabel="label"
               inputId="products_multiple"
               :placeholder="selectedProductList.length === 0 ? 'Товар' : ''"
@@ -458,7 +449,6 @@ const toast = useToast();
             />
           </div>
           <div class="flex flex-wrap gap-2 align-items-center">
-            <label for="products_range" class="widget__title">За</label>
             <DatePicker
               v-model="productDates"
               view="month"
@@ -471,8 +461,9 @@ const toast = useToast();
               :maxDate="productMaxDate"
               showButtonBar
               showIcon
-              showOtherMonths="false"
+              :showOtherMonths="false"
               class="max-w-12rem"
+              placeholder="Период"
             />
           </div>
           <Button type="submit" severity="secondary" label="Показать" />

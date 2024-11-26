@@ -1,75 +1,174 @@
 <script setup>
-import Stepper from "primevue/stepper";
-import StepList from "primevue/steplist";
-import StepPanels from "primevue/steppanels";
-import StepItem from "primevue/stepitem";
-import Step from "primevue/step";
-import StepPanel from "primevue/steppanel";
+import { ref, reactive } from "vue";
+import { usePrimeVue } from "primevue/config";
+
+import Toolbar from "primevue/toolbar";
+import Dialog from "primevue/dialog";
 import Button from "primevue/button";
 
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
+import PercentView from "./PercentView.vue";
+import PointView from "./PointView.vue";
 
-import { ref } from "vue";
+const primevue = usePrimeVue();
+const languageConfig = primevue.config.locale;
 
-const stepItems = ref([
+const product = ref({});
+const settingsEmitObj = ref();
+const deleteProductDialog = ref(false);
+
+const settings = reactive({
+  percent: {
+    settings: {
+      active: false,
+      levels: 5,
+    },
+    privileges: [
+      {
+        id: "AS765HGJAL",
+        label: "Бронзовый",
+        sale: {
+          all: 5,
+        },
+        starts_from: 0,
+      },
+      {
+        id: "AS76AHGJAL",
+        label: "Серебряный",
+        sale: {
+          all: 15,
+        },
+        starts_from: 2000,
+      },
+      {
+        id: "BS765HGJAL",
+        label: "Золотой",
+        sale: {
+          all: 25,
+        },
+        starts_from: 5000,
+      },
+    ],
+  },
+  point: {
+    settings: {
+      active: false,
+      levels: 15,
+    },
+    privileges: [
+      {
+        id: "1S765HGJAL",
+        label: "Уровень 1",
+        sale: {
+          all: 0.5,
+        },
+        starts_from: 0,
+      },
+    ],
+  },
+});
+
+const value = ref(0);
+const toolbarSettings = [
   {
-    label: "Уровень 1",
-    icon: "pi pi-user",
-    content: "Скидка 5% на кросовки",
+    label: "Процентная",
+    component: PercentView,
+    props: settings.percent,
   },
   {
-    label: "Уровень 2",
-    icon: "pi pi-user",
-    content: "Скидка 10% на одежду и обувь",
+    label: "Бальная",
+    component: PointView,
+    props: settings.point,
   },
-  {
-    label: "Уровень 3",
-    icon: "pi pi-user",
-    content: "Скидка 15% на все товары",
-  },
-]);
+];
+
+const confirmDeletePrivilege = (data) => {
+  product.value = data[1];
+  settingsEmitObj.value = data[0];
+  deleteProductDialog.value = true;
+};
+
+const deletePrivilege = () => {
+  settings[settingsEmitObj.value].privileges = settings[
+    settingsEmitObj.value
+  ].privileges.filter((items) => items.label !== product.value.label);
+  deleteProductDialog.value = false;
+};
 </script>
 
 <template>
-  <div class="privilege lg:py-4 py-1 md:pl-3 pl-0">
+  <div class="privilege container__wrapper lg:py-4 py-1 md:pl-3 pl-0">
     <SectionHeaderInfo title="Привилегии" />
 
-    <div class="mt-2">
-      <Stepper value="1">
-        <StepItem
-          v-for="(step, index) in stepItems"
-          :value="`${++index}`"
-          :key="index"
-        >
-          <Step>
-            <h5 class="text-sm font-normal">{{ step.label }}</h5>
-          </Step>
-          <StepPanel v-slot="{ activateCallback }" class="border-round-lg">
-            <div class="flex flex-col">
-              <div
-                class="rounded bg-surface-50 py-3 flex-auto flex justify-center items-center font-medium"
-              >
-                {{ step.content }}
-              </div>
-            </div>
-            <div class="py-5">
-              <Button
-                v-if="index > 1"
-                severity="secondary"
-                class="mr-2 text-sm"
-                label="Назад"
-                @click="activateCallback(`${index - 1}`)"
-              />
-              <Button
-                v-if="index < stepItems.length"
-                class="text-sm"
-                label="Вперед"
-                @click="activateCallback(`${index + 1}`)"
-              />
-            </div>
-          </StepPanel>
-        </StepItem>
-      </Stepper>
+    <Toolbar class="mb-4 border-none shadow-1">
+      <template #start>
+        <Button
+          v-for="(btn, index) in toolbarSettings"
+          :label="btn.label"
+          class="mr-2"
+          @click="value = index"
+          :outlined="value !== index"
+        />
+      </template>
+    </Toolbar>
+
+    <div>
+      <KeepAlive>
+        <component
+          :is="toolbarSettings[value].component"
+          :settingsProps="toolbarSettings[value].props"
+          @confirm-delete-privilege="confirmDeletePrivilege($event)"
+          class="mt-0 settings__component"
+        />
+      </KeepAlive>
     </div>
+
+    <Dialog
+      v-model:visible="deleteProductDialog"
+      :style="{ width: '450px' }"
+      :header="languageConfig.deleteTitle"
+      :modal="true"
+    >
+      <div class="flex items-center gap-4">
+        <i class="pi pi-exclamation-triangle !text-3xl" />
+        <span v-if="product"
+          >Уверены, что хотите удалить <b>{{ product.label }}</b
+          >?</span
+        >
+      </div>
+      <template #footer>
+        <Button
+          :label="languageConfig.reject"
+          icon="pi pi-times"
+          text
+          @click="deleteProductDialog = false"
+        />
+        <Button
+          :label="languageConfig.accept"
+          icon="pi pi-check"
+          @click="deletePrivilege"
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
+
+<style scoped>
+.settings__component :deep(.settings__title) {
+  color: var(--p-text-color);
+}
+
+.settings__component :deep(.p-inputtext) {
+  max-width: 6rem;
+}
+
+@media screen and (max-width: 767px) {
+  .settings__component :deep(.switch) {
+    transform: scale(0.9);
+  }
+
+  .settings__component :deep(.p-inputtext) {
+    font-size: 0.85rem;
+  }
+}
+</style>
