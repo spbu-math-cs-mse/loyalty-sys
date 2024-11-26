@@ -37,11 +37,7 @@ def recreate_table(connection, table_name, table_schema, should_drop=True):
             cursor.execute(drop_table_query)
 
         create_table_query = sql.SQL(
-            f"""
-                CREATE TABLE IF NOT EXISTS {table_name} (
-                    {table_schema}
-                );
-            """
+            f"CREATE TABLE IF NOT EXISTS {table_name} ({table_schema});"
         )
 
         cursor.execute(create_table_query)
@@ -62,11 +58,7 @@ def recreate_enum(connection, enum_name, enum_values, should_drop):
             drop_type_query = sql.SQL(f"DROP TYPE IF EXISTS {enum_name} CASCADE")
             cursor.execute(drop_type_query)
 
-        create_type_query = sql.SQL(
-            f"""
-                CREATE TYPE {enum_name} AS ENUM ({enum_values})
-            """
-        )
+        create_type_query = sql.SQL(f"CREATE TYPE {enum_name} AS ENUM ({enum_values})")
 
         cursor.execute(create_type_query)
 
@@ -353,13 +345,7 @@ def get_purchases_count(connection, start_date, end_date, user_id=None):
     try:
         cursor = connection.cursor()
 
-        base_query = """
-            SELECT
-                COALESCE(SUM(1), 0)
-            FROM
-                purchase_info JOIN purchase on (purchase.id = purchase_id)
-            WHERE 1=1
-            """
+        base_query = "SELECT COALESCE(SUM(1), 0) FROM purchase_info JOIN purchase on (purchase.id = purchase_id) WHERE 1=1"
 
         if start_date is not None:
             base_query += " AND order_date >= %s"
@@ -394,11 +380,8 @@ def get_average_purchase(connection, start_date, end_date):
     try:
         cursor = connection.cursor()
 
-        joined_purchase = """
-            (SELECT purchase_id, quantity, product_id from
-            purchase_info join 
-            (SELECT id from purchase WHERE 1=1
-        """
+        joined_purchase = "(SELECT purchase_id, quantity, product_id from purchase_info join (SELECT id from purchase WHERE 1=1"
+
         if start_date is not None:
             joined_purchase += " AND order_date >= %s"
         if end_date is not None:
@@ -443,13 +426,7 @@ def get_visits_count(connection, start_date, end_date):
     try:
         cursor = connection.cursor()
 
-        base_query = """
-            SELECT
-                COALESCE(SUM(1), 0)
-            FROM
-                purchase
-            WHERE 1=1
-            """
+        base_query = "SELECT COALESCE(SUM(1), 0) FROM purchase WHERE 1=1"
 
         if start_date is not None:
             base_query += " AND order_date >= %s"
@@ -480,12 +457,7 @@ def get_all_products(connection):
     try:
         cursor = connection.cursor()
 
-        base_query = """
-            SELECT
-                *
-            FROM
-                products
-            """
+        base_query = "SELECT * FROM products"
 
         cursor.execute(base_query)
 
@@ -521,10 +493,7 @@ def set_user_discount(connection, user_id, discount_id):
     try:
         cursor = connection.cursor()
 
-        base_query = """UPDATE users
-            SET discount_id = %s
-            WHERE id = %s
-        """
+        base_query = "UPDATE users SET discount_id = %s WHERE id = %s"
 
         cursor.execute(base_query, (discount_id, user_id))
 
@@ -544,10 +513,7 @@ def set_gender(connection, user_id, user_gender):
     try:
         cursor = connection.cursor()
 
-        base_query = """UPDATE users
-            SET user_gender = %s
-            WHERE id = %s
-        """
+        base_query = "UPDATE users SET user_gender = %s WHERE id = %s"
 
         cursor.execute(base_query, (user_gender.value, user_id))
 

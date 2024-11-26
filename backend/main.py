@@ -1,5 +1,4 @@
 import argparse
-from datetime import datetime
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -18,9 +17,9 @@ from postgress.common import (
     get_all_products,
     set_gender,
     set_user_discount,
-    Gender,
-    DiscountType,
 )
+
+from utils import validate_date, get_gender, get_discount_type
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret"
@@ -32,17 +31,6 @@ connection_pool = None
 
 with app.app_context():
     connection_pool = get_connections_pool()
-
-
-def validate_date(date_str: str) -> bool:
-    if date_str is None:
-        return True
-    date_format = "%Y-%m"
-    try:
-        datetime.strptime(date_str, date_format)
-        return True
-    except ValueError:
-        return False
 
 
 @app.route("/user", methods=["POST"])
@@ -214,14 +202,6 @@ def get_products():
         connection_pool.putconn(connection)
 
 
-def get_discount_type(discount):
-    try:
-        return DiscountType(discount.lower())
-    except:
-        print(f"Invalid discount: {discount}")
-        return None
-
-
 @app.route("/user/<int:user_id>/discount", methods=["GET"])
 def get_user_discount_api(user_id: int):
     try:
@@ -230,7 +210,7 @@ def get_user_discount_api(user_id: int):
 
         if result is None:
             return (
-                jsonify({"type": "unknown", "value": None}),
+                jsonify({"type": "no discount yet", "value": None}),
                 200,
             )
 
@@ -257,7 +237,7 @@ def set_user_discount_api(user_id: int):
         if result is None:
             return jsonify({"message": Message.INVALID_DISCOUNT.value}), 400
 
-        return jsonify({"message": Message.GENDER_UPDATED.value}), 200
+        return jsonify({"message": Message.DISCOUNT_UPDATED.value}), 200
     finally:
         connection_pool.putconn(connection)
 
@@ -282,14 +262,6 @@ def get_user_total_purchases_api(user_id: int):
 # def get_user_loyalty_level_api(user_id: int):
 #     loyalty_level = "Серебряный"  # TODO: implement database function
 #     return jsonify({"loyalty_level": loyalty_level})
-
-
-def get_gender(gender):
-    try:
-        return Gender(gender.lower())
-    except:
-        print(f"Invalid gender: {gender}")
-        return None
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])
