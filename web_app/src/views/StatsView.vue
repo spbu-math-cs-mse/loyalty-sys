@@ -214,7 +214,7 @@ const setChartDoughnutData = () => {
         labels: ["Мужчины", "Женщины", "Неизвестно"],
         datasets: [
           {
-            data: [540, 625, 152],
+            data: [1, 2, 2],
             backgroundColor: colors,
             hoverBackgroundColor: hoverColors,
             borderRadius: 2,

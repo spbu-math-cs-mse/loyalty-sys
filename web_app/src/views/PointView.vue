@@ -17,6 +17,7 @@ import Toolbar from "primevue/toolbar";
 import Badge from "primevue/badge";
 import Dialog from "primevue/dialog";
 
+const emit = defineEmits(['syncroneSettings'])
 const props = defineProps({
   settingsProps: {
     type: Object,
@@ -45,6 +46,7 @@ const isModified = computed(() => {
 
 const saveSettings = () => {
   Object.assign(settings.value, editableSettings);
+  emit('syncroneSettings')
 };
 
 const cancelSettingsChanges = () => {
@@ -110,6 +112,7 @@ const saveProduct = () => {
       });
     }
 
+    emit('syncroneSettings')
     productDialog.value = false;
     product.value = {
       sale: {},
@@ -226,9 +229,10 @@ watch(
             inputId="point_levels"
             mode="decimal"
             showButtons
-            :min="0"
+            :min="1"
             :max="20"
             :step="1"
+            :invalid="editableSettings.levels === null"
           />
         </div>
 
@@ -237,7 +241,7 @@ watch(
             :label="languageConfig.saveTitle"
             severity="success"
             @click="saveSettings"
-            :disabled="isModified"
+            :disabled="isModified || !editableSettings.levels"
             :outlined="isModified"
           />
           <Button
