@@ -26,29 +26,26 @@ const settings = reactive({
     privileges: [
       {
         id: "AS765HGJAL",
-        label: "Уровень 1",
+        label: "Бронзовый",
         sale: {
           all: 5,
         },
-        saleAll: 0.5,
         starts_from: 0,
       },
       {
         id: "AS76AHGJAL",
-        label: "Уровень 2",
+        label: "Серебряный",
         sale: {
           all: 15,
         },
-        saleAll: 0.5,
         starts_from: 2000,
       },
       {
         id: "BS765HGJAL",
-        label: "Уровень 3",
+        label: "Золотой",
         sale: {
           all: 25,
         },
-        saleAll: 0.5,
         starts_from: 5000,
       },
     ],
@@ -115,8 +112,6 @@ const deletePrivilege = () => {
         />
       </template>
     </Toolbar>
-
-    <pre>{{ toolbarSettings[value].props }}</pre>
 
     <div>
       <KeepAlive>

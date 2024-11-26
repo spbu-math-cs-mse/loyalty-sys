@@ -3,7 +3,7 @@ import Menu from "primevue/menu";
 import Button from "primevue/button";
 import Drawer from "primevue/drawer";
 import Toast from "primevue/toast";
-import ToggleSwitch from "primevue/toggleswitch";
+import ToggleButton from "primevue/togglebutton";
 
 import { computed, onMounted, onUnmounted, ref } from "vue";
 
@@ -145,16 +145,16 @@ const { width, height } = useBreakpoints();
             'justify-content-center': !desktopMenuFixed,
           }"
         >
-          <ToggleSwitch v-model="desktopMenuFixed" class="toggle__switch">
-            <template #handle="{ checked }">
-              <i
-                :class="[
-                  'text-xs pi',
-                  { 'pi-lock': checked, 'pi-lock-open': !checked },
-                ]"
-              />
-            </template>
-          </ToggleSwitch>
+          <ToggleButton
+            v-model="desktopMenuFixed"
+            onLabel=" "
+            offLabel=" "
+            onIcon="pi pi-arrow-left"
+            size="small"
+            offIcon="pi pi-arrow-right"
+            class="toggle__switch"
+            aria-label="Do you confirm"
+          />
         </div>
         <img
           class="logo block mb-1 mt-2"

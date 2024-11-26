@@ -61,10 +61,21 @@ const createId = () => {
 };
 
 const openNew = () => {
-  productDialogText.value = languageConfig.addTitle;
-  product.value = {};
-  submitted.value = false;
-  productDialog.value = true;
+  if (privilegeLevels.value.length < settings.value.levels) {
+    productDialogText.value = languageConfig.addTitle;
+    product.value = {
+      sale: {},
+    };
+    submitted.value = false;
+    productDialog.value = true;
+  } else {
+    toast.add({
+      severity: toastConfig.severity.error,
+      summary: toastConfig.summary.error,
+      detail: toastConfig.detail.privillege.max,
+      life: 3000,
+    });
+  }
 };
 
 const hideDialog = () => {
@@ -99,14 +110,39 @@ const saveProduct = () => {
     }
 
     productDialog.value = false;
-    product.value = {};
+    product.value = {
+      sale: {},
+    };
   }
 };
 
 const editPrivilege = (privilege) => {
   productDialogText.value = languageConfig.editTitle;
-  product.value = { ...privilege };
+  product.value = JSON.parse(JSON.stringify(privilege));
   productDialog.value = true;
+};
+
+const deepClone = (inObject) => {
+  let outObject, value, key;
+
+  if (typeof inObject !== "object" || inObject === null) return inObject;
+
+  if (inObject instanceof Map) {
+    outObject = new Map(inObject);
+    for ([key, value] of outObject) outObject.set(key, deepClone(value));
+  } else if (inObject instanceof Set) {
+    outObject = new Set();
+    for (value of inObject) outObject.add(deepClone(value));
+  } else if (inObject instanceof Date) {
+    outObject = new Date(+inObject);
+  } else {
+    outObject = Array.isArray(inObject) ? [] : {};
+    for (key in inObject) {
+      value = inObject[key];
+      outObject[key] = deepClone(value);
+    }
+  }
+  return outObject;
 };
 
 watch(
@@ -152,7 +188,7 @@ watch(
             :value="index"
           >
             <div class="py-2 md:p-2">
-              <p class="m-0">Скидка на все товары: {{ tab.saleAll }}</p>
+              <p class="m-0">Скидка на все товары: {{ tab.sale.all }}</p>
               <p class="m-0">Порог входа: {{ tab.starts_from }}</p>
             </div>
 
@@ -261,7 +297,7 @@ watch(
             >Cкидка на все товары</label
           >
           <InputNumber
-            v-model="product.saleAll"
+            v-model="product.sale.all"
             inputId="saleAll"
             mode="decimal"
             suffix="%"
