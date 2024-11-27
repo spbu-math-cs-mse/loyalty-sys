@@ -11,9 +11,11 @@ from postgress.common import (
     insert_purchase_info,
     get_product_statistic,
     get_purchases_count,
+    get_purchases_sum,
     get_user_discount,
     get_average_purchase,
     get_visits_count,
+    get_visitors_count,
     get_all_products,
     set_gender,
     set_user_discount,
@@ -149,7 +151,7 @@ def get_total_purchases():
 
     try:
         connection = connection_pool.getconn()
-        result = get_purchases_count(connection, start_date, end_date)
+        result = get_purchases_sum(connection, start_date, end_date)
         return jsonify({"total_purchases": result})
     finally:
         connection_pool.putconn(connection)
@@ -181,7 +183,7 @@ def get_visitor_count():
 
     try:
         connection = connection_pool.getconn()
-        result = get_visits_count(connection, start_date, end_date)
+        result = get_visitors_count(connection)
         return jsonify({"visitor_count": result})
     finally:
         connection_pool.putconn(connection)
@@ -252,16 +254,16 @@ def get_user_total_purchases_api(user_id: int):
 
     try:
         connection = connection_pool.getconn()
-        result = get_purchases_count(connection, start_date, end_date, user_id)
+        result = get_purchases_sum(connection, start_date, end_date, user_id)
         return jsonify({"total_purchases": result})
     finally:
         connection_pool.putconn(connection)
 
 
-# @app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
-# def get_user_loyalty_level_api(user_id: int):
-#     loyalty_level = "Серебряный"  # TODO: implement database function
-#     return jsonify({"loyalty_level": loyalty_level})
+@app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
+def get_user_loyalty_level_api(user_id: int):
+    loyalty_level = "Серебряный"  # TODO: implement database function
+    return jsonify({"loyalty_level": loyalty_level})
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])

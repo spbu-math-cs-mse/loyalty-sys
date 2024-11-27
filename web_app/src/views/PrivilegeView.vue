@@ -39,7 +39,7 @@ const settings = reactive({
         sale: {
           all: 15,
         },
-        starts_from: 2000,
+        starts_from: 5000,
       },
       {
         id: "BS765HGJAL",
@@ -47,7 +47,7 @@ const settings = reactive({
         sale: {
           all: 25,
         },
-        starts_from: 5000,
+        starts_from: 50000,
       },
     ],
   },

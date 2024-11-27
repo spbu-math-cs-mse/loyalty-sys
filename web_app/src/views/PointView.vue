@@ -170,7 +170,7 @@ watch(
             :value="index"
           >
             <div class="py-2 md:p-2">
-              <p class="m-0">Баллы со всеx товаров: {{ tab.saleAll }}</p>
+              <p class="m-0">Баллы со всеx товаров: {{ tab.sale.all }}%</p>
               <p class="m-0">Порог входа: {{ tab.starts_from }}</p>
             </div>
 
