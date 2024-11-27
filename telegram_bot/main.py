@@ -35,6 +35,16 @@ def send_info(message):
         total_purchases = get_total_purchases(user_id)
         loyalty_level = get_loyalty_level(user_id)
 
+        if (total_purchases < 5000):
+            loyalty_level = "Бронзовый"
+            discount_info = {"type": "Скидка", "value": 5}
+        elif (total_purchases >= 5000 and total_purchases < 50000):
+            loyalty_level = "Серебряный"
+            discount_info = {"type": "Скидка", "value": 15}
+        else:
+            loyalty_level = "Золотой"
+            discount_info = {"type": "Скидка", "value": 25}
+
         info_message = create_info_message(
             discount_info, total_purchases, loyalty_level
         )
