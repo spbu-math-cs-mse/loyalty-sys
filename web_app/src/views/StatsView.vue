@@ -1,49 +1,21 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { Form } from "@primevue/forms";
 import { useToast } from "primevue/usetoast";
 import { usePrimeVue } from "primevue/config";
+import { Form } from "@primevue/forms";
 import { $dt } from "@primevue/themes";
 
 import Chart from "primevue/chart";
-import SectionHeaderInfo from "@/components/SectionHeaderInfo.vue";
-import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
 import AutoComplete from "primevue/autocomplete";
+import SectionHeaderInfo from "@/components/SectionHeaderInfo.vue";
+import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 
 const axios = require("axios");
 const primevue = usePrimeVue();
 
-const getColorsForCharts = (count = 0, power = 500) => {
-  const defaultColors = [
-    `emerald.${power}`,
-    `green.${power}`,
-    `lime.${power}`,
-    `red.${power}`,
-    `orange.${power}`,
-    `amber.${power}`,
-    `yellow.${power}`,
-    `teal.${power}`,
-    `cyan.${power}`,
-    `blue.${power}`,
-    `indigo.${power}`,
-    `violet.${power}`,
-    `purple.${power}`,
-    `fuchsia.${power}`,
-    `pink.${power}`,
-    `rose.${power}`,
-    `slate.${power}`,
-    `gray.${power}`,
-    `zinc.${power}`,
-    `neutral.${power}`,
-    `stone.${power}`,
-  ];
-
-  return defaultColors.slice(0, count).map((x) => $dt(x).value);
-};
-
-const productList = ref();
+const productList = ref([]);
 const selectedProductList = ref([]);
 const filteredProductList = ref([]);
 
@@ -88,17 +60,7 @@ let today = new Date();
 let currentMonth = today.getMonth();
 let currentYear = today.getFullYear();
 
-const totalPurchases = ref();
-const averageCheck = ref();
-const visitorCount = ref();
-
-const fetchDate = ref({
-  start: today.toISOString().substring(0, 7),
-  end: today.toISOString().substring(0, 7),
-});
-
 const productDates = ref([]);
-
 const productMinDate = ref(new Date());
 const productMaxDate = ref(new Date());
 
@@ -106,6 +68,11 @@ productMinDate.value.setMonth(currentMonth - 1);
 productMinDate.value.setFullYear(currentYear - 1);
 productMaxDate.value.setMonth(currentMonth);
 productMaxDate.value.setFullYear(currentYear);
+
+const fetchDate = ref({
+  start: today.toISOString().substring(0, 7),
+  end: today.toISOString().substring(0, 7),
+});
 
 const getMonthsInRange = (fromDate, toDate) => {
   if (!fromDate || !toDate) {
@@ -129,11 +96,11 @@ const getMonthsInRange = (fromDate, toDate) => {
 };
 
 onMounted(() => {
-  chartDoughnutOptions.value = setChartOptionsDoughnut();
-  chartDoughnutConfig.value = setChartConfigDoughnut();
+  chartDoughnutOptions.value = setChartDoughnutOptions();
+  chartDoughnutConfig.value = setChartDoughnutConfig();
 
-  chartLineOptions.value = setChartOptionsLine();
-  chartLineConfig.value = setChartConfigDoughnut();
+  chartLineOptions.value = setChartLineOptions();
+  chartLineConfig.value = setChartDoughnutConfig();
 
   axios
     .all([
@@ -147,6 +114,7 @@ onMounted(() => {
         params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/products"),
+      axios.get("http://84.201.143.213:5000/data/buys_more"),
     ])
     .then(
       axios.spread(
@@ -154,11 +122,13 @@ onMounted(() => {
           totalPurchasesResponse,
           averageCheckResponse,
           visitorCountResponse,
-          productListResponse
+          productListResponse,
+          chartDataResponse
         ) => {
           totalPurchases.value = totalPurchasesResponse.data.total_purchases;
           averageCheck.value = averageCheckResponse.data.average_check;
           visitorCount.value = visitorCountResponse.data.visitor_count;
+          chartDataDataset.value = chartDataResponse.data;
 
           productList.value = productListResponse.data;
         }
@@ -169,7 +139,12 @@ onMounted(() => {
     });
 });
 
+const totalPurchases = ref();
+const averageCheck = ref();
+const visitorCount = ref();
+
 const chartData = ref();
+const chartDataDataset = ref([]);
 
 const chartDoughnutOptions = ref();
 const chartDoughnutConfig = ref();
@@ -177,9 +152,37 @@ const chartDoughnutConfig = ref();
 const chartLineOptions = ref();
 const chartLineConfig = ref();
 const chartLineData = ref({});
-const flag = ref(1);
 
-const setChartConfigDoughnut = () => {
+const getColorsForCharts = (count = 0, power = 500) => {
+  const defaultColors = [
+    `emerald.${power}`,
+    `green.${power}`,
+    `lime.${power}`,
+    `red.${power}`,
+    `orange.${power}`,
+    `amber.${power}`,
+    `yellow.${power}`,
+    `teal.${power}`,
+    `cyan.${power}`,
+    `blue.${power}`,
+    `indigo.${power}`,
+    `violet.${power}`,
+    `purple.${power}`,
+    `fuchsia.${power}`,
+    `pink.${power}`,
+    `rose.${power}`,
+    `slate.${power}`,
+    `gray.${power}`,
+    `zinc.${power}`,
+    `neutral.${power}`,
+    `stone.${power}`,
+  ];
+
+  return defaultColors.slice(0, count).map((x) => $dt(x).value);
+
+};
+
+const setChartDoughnutConfig = () => {
   return {
     id: "customCanvasBackgroundColor",
     beforeDraw: (chart, args, options) => {
@@ -193,9 +196,6 @@ const setChartConfigDoughnut = () => {
   };
 };
 
-/* 
-  TODO: delete switch construction and flag definition after adding backend interaction
-*/
 const setChartDoughnutData = () => {
   const colors = [
     $dt("cyan.500").value,
@@ -208,48 +208,17 @@ const setChartDoughnutData = () => {
     $dt("gray.400").value,
   ];
 
-  switch (flag.value) {
-    case 1:
-      chartData.value = {
-        labels: ["Мужчины", "Женщины", "Неизвестно"],
-        datasets: [
-          {
-            data: [540, 625, 152],
-            backgroundColor: colors,
-            hoverBackgroundColor: hoverColors,
-            borderRadius: 2,
-          },
-        ],
-      };
-      break;
-
-    case 2:
-      chartData.value = {
-        labels: ["Мужчины", "Женщины", "Хз.. Кто-то"],
-        datasets: [
-          {
-            data: [1540, 2625, 10152],
-            backgroundColor: colors,
-            hoverBackgroundColor: hoverColors,
-            borderRadius: 2,
-          },
-        ],
-      };
-      break;
-
-    default:
-      chartData.value = {
-        labels: ["Мужчины", "Женщины", "В душе не чаю кто ты, Воин!"],
-        datasets: [
-          {
-            data: [100, 62500, 1],
-            backgroundColor: colors,
-            hoverBackgroundColor: hoverColors,
-            borderRadius: 2,
-          },
-        ],
-      };
-  }
+  chartData.value = {
+    labels: ["Мужчины", "Женщины", "Неизвестно"],
+    datasets: [
+      {
+        data: chartDataDataset,
+        backgroundColor: colors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius: 2,
+      },
+    ],
+  };
 
   return chartData.value;
 };
@@ -290,7 +259,7 @@ const setChartLineData = () => {
   }
 };
 
-const setChartOptionsLine = () => {
+const setChartLineOptions = () => {
   const documentStyle = getComputedStyle(document.documentElement);
   const textColorSecondary = documentStyle.getPropertyValue(
     "--p-text-muted-color"
@@ -299,7 +268,7 @@ const setChartOptionsLine = () => {
     "--p-content-border-color"
   );
 
-  const a = setChartOptionsDoughnut();
+  const a = setChartDoughnutOptions();
   a.plugins.title.display = false;
   a.layout.padding.left = 0;
   a.scales = {
@@ -325,7 +294,7 @@ const setChartOptionsLine = () => {
   return a;
 };
 
-const setChartOptionsDoughnut = () => {
+const setChartDoughnutOptions = () => {
   const documentStyle = getComputedStyle(document.documentElement);
   const textColor = documentStyle.getPropertyValue("--p-text-color");
   const backgroundColor = documentStyle.getPropertyValue("--p-menu-background");
