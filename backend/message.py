@@ -19,3 +19,4 @@ class Message(Enum):
     DISCOUNT_UPDATED = "Discount updated successfully"
     INVALID_DISCOUNT = "Couldn't set this discount"
     NO_DISCOUNT = "No discount id"
+    BIRTHDAY_REQUIRED = "Birthday is required"
