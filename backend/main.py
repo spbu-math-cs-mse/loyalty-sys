@@ -295,12 +295,6 @@ def update_user_birthday_api(user_id: int):
     return jsonify(f"ok for {user_id}"), 200
 
 
-@app.route("/user/<int:user_id>/chat_id", methods=["PUT"])
-def update_user_birthday_api(user_id: int):
-    # TODO: implement handling chat_id in database
-    return jsonify(1), 200
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="0.0.0.0")
