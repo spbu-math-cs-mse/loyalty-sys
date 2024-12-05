@@ -276,9 +276,9 @@ async def loyalty_update(
 ):  # http://84.201.143.213:5050/loyalty_updates/
     try:
         data = await request.json()
-        user_id = data["user_id"]
+        chat_id = data["chat_id"]
         loyalty_level = data["loyalty_level"]
-        send_loyalty_update_message(user_id, loyalty_level)
+        send_loyalty_update_message(chat_id, loyalty_level)
         return {"status": "success"}
     except KeyError as e:
         raise HTTPException(status_code=400, detail=f"Missing field: {e}")
@@ -288,12 +288,10 @@ async def loyalty_update(
         )
 
 
-def send_loyalty_update_message(user_id, loyalty_level):
+def send_loyalty_update_message(chat_id, loyalty_level):
     try:
-        chat_id = get_chat_id_from_user_id(user_id)
-        if chat_id:
-            message = f"{BotMessages.LOYALTY_LEVEL_INCREASING.value} {loyalty_level}!"
-            bot.send_message(chat_id, message)
+        message = f"{BotMessages.LOYALTY_LEVEL_INCREASING.value} {loyalty_level}!"
+        bot.send_message(chat_id, message)
     except Exception as e:
         print(f"{BotMessages.BACKEND_ERROR.value} {e}")
 
