@@ -209,12 +209,6 @@ def get_user_id(chat_id):
         raise Exception(f"{BotMessages.USER_ID_ERROR.value} {response.text}")
 
 
-def get_chat_id_from_user_id(user_id):
-    response = requests.get(f"{BACKEND_URL}/user/{user_id}/chat_id")
-    response.raise_for_status()
-    return response.json().get("chat_id")
-
-
 def get_discount_info(user_id):
     response = requests.get(f"{BACKEND_URL}/user/{user_id}/discount")
     response.raise_for_status()
