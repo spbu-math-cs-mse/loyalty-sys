@@ -32,6 +32,16 @@ connection_pool = None
 with app.app_context():
     connection_pool = get_connections_pool()
 
+@app.route("/privileges", methods=["GET"])
+def get_privileges():
+    privileges = {}  # TODO: implement database function
+    return jsonify(privileges), 200
+
+
+@app.route("/privileges", methods=["POST"])
+def send_privileges():
+    data = request.json  # TODO: implement database function
+    return jsonify({"message": "Feedback"}), 200
 
 @app.route("/user", methods=["POST"])
 def create_user():
