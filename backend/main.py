@@ -258,10 +258,10 @@ def get_user_total_purchases_api(user_id: int):
         connection_pool.putconn(connection)
 
 
-# @app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
-# def get_user_loyalty_level_api(user_id: int):
-#     loyalty_level = "Серебряный"  # TODO: implement database function
-#     return jsonify({"loyalty_level": loyalty_level})
+@app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
+def get_user_loyalty_level_api(user_id: int):
+    loyalty_level = "Серебряный"  # TODO: implement database function
+    return jsonify({"loyalty_level": loyalty_level})
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])
@@ -282,6 +282,17 @@ def update_user_gender_api(user_id: int):
         return jsonify({"message": Message.INVALID_GENDER.value}), 400
     finally:
         connection_pool.putconn(connection)
+
+
+@app.route("/user/<int:user_id>/birthday", methods=["PUT"])
+def update_user_birthday_api(user_id: int):
+    data = request.json
+    birthday = data.get("birthday")
+    if not birthday:
+        return jsonify({"message": Message.BIRTHDAY_REQUIRED.value}), 400
+
+    # TODO: implement handling birthday in database
+    return jsonify(f"ok for {user_id}"), 200
 
 
 if __name__ == "__main__":
