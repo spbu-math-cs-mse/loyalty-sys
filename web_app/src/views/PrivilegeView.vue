@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { usePrimeVue } from "primevue/config";
 
 import Toolbar from "primevue/toolbar";
@@ -9,6 +9,7 @@ import Button from "primevue/button";
 import SectionHeaderInfo from "../components/SectionHeaderInfo.vue";
 import PercentView from "./PercentView.vue";
 import PointView from "./PointView.vue";
+import axios from "axios";
 
 const primevue = usePrimeVue();
 const languageConfig = primevue.config.locale;
@@ -38,7 +39,7 @@ const settings = reactive({
         sale: {
           all: 15,
         },
-        starts_from: 2000,
+        starts_from: 5000,
       },
       {
         id: "BS765HGJAL",
@@ -46,7 +47,7 @@ const settings = reactive({
         sale: {
           all: 25,
         },
-        starts_from: 5000,
+        starts_from: 50000,
       },
     ],
   },
@@ -93,7 +94,33 @@ const deletePrivilege = () => {
     settingsEmitObj.value
   ].privileges.filter((items) => items.label !== product.value.label);
   deleteProductDialog.value = false;
+  tupayaRuchkaSend()
 };
+
+onMounted(() => {
+  axios.get("http://84.201.143.213:5000/privileges")
+  .then((response) => {
+    settings.value = response.data;
+    console.log(response)
+  })
+  .catch((error) =>{
+    console.log(error)
+  })
+})
+
+const tupayaRuchkaSend = () => {
+  axios.post("http://84.201.143.213:5000/privileges", {
+    settings: settings,
+  })
+  .then((response) => {
+    console.log("SEND NEW PRIVILEGES SETTINGS");
+    console.log(response);
+  })
+  .catch((error) =>{
+    console.log(error)
+  })
+}
+
 </script>
 
 <template>
@@ -118,6 +145,7 @@ const deletePrivilege = () => {
           :is="toolbarSettings[value].component"
           :settingsProps="toolbarSettings[value].props"
           @confirm-delete-privilege="confirmDeletePrivilege($event)"
+          @syncrone-settings="tupayaRuchkaSend"
           class="mt-0 settings__component"
         />
       </KeepAlive>
