@@ -286,6 +286,17 @@ def update_user_gender_api(user_id: int):
         connection_pool.putconn(connection)
 
 
+@app.route("/user/<int:user_id>/birthday", methods=["PUT"])
+def update_user_birthday_api(user_id: int):
+    data = request.json
+    birthday = data.get("birthday")
+    if not birthday:
+        return jsonify({"message": Message.BIRTHDAY_REQUIRED.value}), 400
+
+    # TODO: implement handling birthday in database
+    return jsonify(f"ok for {user_id}"), 200
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", default="0.0.0.0")

@@ -1,7 +1,18 @@
 from io import BytesIO
 from PIL import Image
+from datetime import datetime
+from fastapi import FastAPI, HTTPException, Request
 
 from common import get_bot_token, create_info_message, generate_data_for_qr_code
+from birthday_utils import (
+    user_data,
+    State,
+    BirthdayCallbackStrings,
+    create_year_range_keyboard,
+    create_year_keyboard,
+    create_month_keyboard,
+    create_day_keyboard,
+)
 from message import BotMessages
 from gender import Genders
 from telebot import types
@@ -11,11 +22,14 @@ from qrcode.image.styles.moduledrawers.pil import RoundedModuleDrawer
 import telebot
 import requests
 import qrcode
+import uvicorn
+import threading
 
 BOT_TOKEN = get_bot_token()
 BACKEND_URL = "http://84.201.143.213:5000"
 
 bot = telebot.TeleBot(BOT_TOKEN)
+app = FastAPI()
 
 
 @bot.message_handler(commands=["start"])
@@ -31,23 +45,11 @@ def start_message(message):
 def send_info(message):
     try:
         user_id = get_user_id(message.chat.id)
-        discount_info = get_discount_info(user_id)
         total_purchases = get_total_purchases(user_id)
-        loyalty_level = get_loyalty_level(user_id)
+        loyalty_levels = get_loyalty_levels(user_id)
 
-        if (total_purchases < 5000):
-            loyalty_level = "Бронзовый"
-            discount_info = {"type": "Скидка", "value": 5}
-        elif (total_purchases >= 5000 and total_purchases < 50000):
-            loyalty_level = "Серебряный"
-            discount_info = {"type": "Скидка", "value": 15}
-        else:
-            loyalty_level = "Золотой"
-            discount_info = {"type": "Скидка", "value": 25}
+        info_message = create_info_message(total_purchases, loyalty_levels)
 
-        info_message = create_info_message(
-            discount_info, total_purchases, loyalty_level
-        )
         bot.send_message(message.chat.id, info_message)
     except requests.exceptions.RequestException as e:
         bot.send_message(message.chat.id, f"{BotMessages.BACKEND_ERROR.value} ({e})")
@@ -78,9 +80,94 @@ def ask_gender(message):
     bot.register_next_step_handler(message, process_gender)
 
 
+@bot.message_handler(commands=["birthday"])
+def ask_birthday(message):
+    user_data[message.chat.id] = {"state": State.STATE_YEAR_RANGE.value}
+    markup = create_year_range_keyboard()
+    bot.send_message(
+        message.chat.id,
+        BotMessages.BIRTHDAY_YEAR_RANGE_CHOICE.value,
+        reply_markup=markup,
+    )
+
+
+@bot.callback_query_handler(
+    func=lambda call: call.data.startswith(BirthdayCallbackStrings.YEAR_RANGE.value)
+)
+def process_year_range(call):
+    start_year, end_year = map(
+        int, call.data[len(BirthdayCallbackStrings.YEAR_RANGE.value) :].split(":")
+    )
+    user_data[call.from_user.id]["state"] = State.STATE_YEAR.value
+    markup = create_year_keyboard(start_year, end_year)
+    bot.edit_message_text(
+        text=BotMessages.BIRTHDAY_YEAR_CHOICE.value,
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=markup,
+    )
+
+
+@bot.callback_query_handler(
+    func=lambda call: call.data.startswith(BirthdayCallbackStrings.YEAR.value)
+)
+def process_year(call):
+    year = int(call.data[len(BirthdayCallbackStrings.YEAR.value) :])
+    user_data[call.from_user.id]["state"] = State.STATE_MONTH.value
+    user_data[call.from_user.id]["year"] = year
+    markup = create_month_keyboard(year)
+    bot.edit_message_text(
+        text=BotMessages.BIRTHDAY_MONTH_CHOICE.value,
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=markup,
+    )
+
+
+@bot.callback_query_handler(
+    func=lambda call: call.data.startswith(BirthdayCallbackStrings.MONTH.value)
+)
+def process_month(call):
+    year, month = map(
+        int, call.data[len(BirthdayCallbackStrings.MONTH.value) :].split(":")
+    )
+    user_data[call.from_user.id]["state"] = State.STATE_DAY.value
+    user_data[call.from_user.id]["month"] = month
+    markup = create_day_keyboard(year, month)
+    bot.edit_message_text(
+        text=BotMessages.BIRTHDAY_DAY_CHOICE.value,
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+        reply_markup=markup,
+    )
+
+
+@bot.callback_query_handler(
+    func=lambda call: call.data.startswith(BirthdayCallbackStrings.DAY.value)
+)
+def process_day(call):
+    year, month, day = map(
+        int, call.data[len(BirthdayCallbackStrings.DAY.value) :].split(":")
+    )
+    birthday = datetime(year, month, day)
+    user_data[call.from_user.id]["state"] = State.STATE_DONE.value
+    user_data[call.from_user.id]["birthday"] = birthday
+    bot.edit_message_text(
+        text=f"{BotMessages.BIRTHDAY_CHOICE_RESULT.value}{birthday.strftime('%Y-%m-%d')}",
+        chat_id=call.message.chat.id,
+        message_id=call.message.id,
+    )
+    try:
+        update_birthday(call.from_user.id, birthday)
+    except Exception as e:
+        bot.send_message(
+            call.message.chat.id, f"{BotMessages.BIRTHDAY_CHOICE_ERROR.value} {e}"
+        )
+
+
 def create_default_buttons():
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.add("/info", "/qrcode", "/gender")
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup.add("/info", "/qrcode", "/gender", "/birthday")
     return markup
 
 
@@ -120,19 +207,13 @@ def get_user_id(chat_id):
         raise Exception(f"{BotMessages.USER_ID_ERROR.value} {response.text}")
 
 
-def get_discount_info(user_id):
-    response = requests.get(f"{BACKEND_URL}/user/{user_id}/discount")
-    response.raise_for_status()
-    return response.json()
-
-
 def get_total_purchases(user_id):
     response = requests.get(f"{BACKEND_URL}/user/{user_id}/total_purchases")
     response.raise_for_status()
     return response.json()["total_purchases"]
 
 
-def get_loyalty_level(user_id):
+def get_loyalty_levels(user_id):
     response = requests.get(f"{BACKEND_URL}/user/{user_id}/loyalty_level")
     response.raise_for_status()
     return response.json()["loyalty_level"]
@@ -142,6 +223,15 @@ def update_gender(chat_id, gender):
     user_id = get_user_id(chat_id)
     response = requests.put(
         f"{BACKEND_URL}/user/{user_id}/gender", json={"gender": gender}
+    )
+    response.raise_for_status()
+
+
+def update_birthday(chat_id, birthday):
+    user_id = 1
+    response = requests.put(
+        f"{BACKEND_URL}/user/{user_id}/birthday",
+        json={"birthday": birthday.strftime("%Y-%m-%d")},
     )
     response.raise_for_status()
 
@@ -166,5 +256,32 @@ def generate_qr_code(user_id):
     return img_byte_arr.getvalue()
 
 
+@app.post("/loyalty_updates/")
+async def loyalty_update(
+    request: Request,
+):  # http://84.201.143.213:5050/loyalty_updates/
+    try:
+        data = await request.json()
+        chat_id = data["chat_id"]
+        loyalty_level = data["loyalty_level"]
+        send_loyalty_update_message(chat_id, loyalty_level)
+        return {"status": "success"}
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Missing field: {e}")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"{BotMessages.BACKEND_ERROR.value} {e}"
+        )
+
+
+def send_loyalty_update_message(chat_id, loyalty_level):
+    try:
+        message = f"{BotMessages.LOYALTY_LEVEL_INCREASING.value} {loyalty_level}!"
+        bot.send_message(chat_id, message)
+    except Exception as e:
+        print(f"{BotMessages.BACKEND_ERROR.value} {e}")
+
+
 if __name__ == "__main__":
+    threading.Thread(target=lambda: uvicorn.run(app, host="0.0.0.0", port=5050)).start()
     bot.infinity_polling()
