@@ -42,18 +42,20 @@ const onFormSubmit = () => {
     return;
   }
 
-  toast.add({ severity: 'success', summary: 'Форма отправлена', life: 3000 });
-
   waitingData.value = true;
-  user.getHash(formData.value.password)
-  .then((hex) => formData.value.password = hex)
+  const sendingData = { 
+    username: formData.value.username, 
+    password: formData.value.password 
+  };
+  user.getHash(sendingData.password)
+  .then((hex) => sendingData.password = hex)
   .then(() => {
-    axios.post('http://84.201.143.213:5000/login', formData.value)
+    axios.post('http://84.201.143.213:5000/login', sendingData)
     .then((response) => {
       console.log(response);
     
-      if(response.error.length) {
-        switch(response.error.type) {
+      if(response.error !== '') {
+        switch(response.error) {
           case errorTypes.invalidPassword:
             formData.value.password = '';
             toast.add({ severity: 'error', summary: 'Ошибка', detail: response.error.type, life: 3000 });
@@ -64,6 +66,9 @@ const onFormSubmit = () => {
             formData.value.password = '';
             toast.add({ severity: 'error', summary: 'Ошибка', detail: response.error.type, life: 3000 });
             break;
+            
+          default:
+            toast.add({ severity: 'error', summary: 'Ошибка', detail: response.error.type, life: 3000 });
         }
         return;
       }
@@ -83,6 +88,8 @@ const onFormSubmit = () => {
       user.auth = true;
       router.push('/');
     });
+
+    toast.add({ severity: 'success', summary: 'Форма отправлена', life: 3000 });
   })
 };
 
