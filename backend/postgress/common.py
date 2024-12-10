@@ -332,11 +332,28 @@ def get_all_products(connection):
             cursor.close()
 
 
-def get_user_discount(connection, user_id):
+def get_loyalty_level(connection, user_id):
     try:
         cursor = connection.cursor()
 
-        base_query = "SELECT discount_type, level FROM users JOIN discounts on (discounts.id = users.discount_id) where users.id = %s"
+        base_query = """
+            SELECT 
+                dt.name AS discount_type_name,
+                d.name AS discount_name,
+                d.value AS discount_value,
+                d.money_threshold AS discount_threshold
+            FROM 
+                users u
+            JOIN 
+                user_to_discount ud ON u.id = ud.user_id
+            JOIN 
+                discount d ON ud.discount_id = d.id
+            JOIN 
+                discount_type dt ON d.type_id = dt.id
+            WHERE 
+                u.id = %s AND 
+                dt.is_enabled = TRUE;
+        """
 
         cursor.execute(base_query, (user_id))
 
@@ -350,13 +367,13 @@ def get_user_discount(connection, user_id):
             cursor.close()
 
 
-def set_user_discount(connection, user_id, discount_id):
+def update_user_discount(connection, user_id, new_discount_id, old_discount_id):
     try:
         cursor = connection.cursor()
 
-        base_query = "UPDATE users SET discount_id = %s WHERE id = %s"
+        base_query = "UPDATE user_to_discount SET discount_id = %s WHERE user_id = %s AND discount_id = %s"
 
-        cursor.execute(base_query, (discount_id, user_id))
+        cursor.execute(base_query, (new_discount_id, user_id, old_discount_id))
 
         return True
     except Exception as error:
@@ -381,6 +398,25 @@ def set_gender(connection, user_id, user_gender):
         return True
     except Exception as error:
         print("Error in set_gender: ", error)
+        connection.rollback()
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+def set_birthday(connection, user_id, user_birthday):
+    try:
+        cursor = connection.cursor()
+
+        base_query = "UPDATE users SET birth_date = %s WHERE id = %s"
+
+        cursor.execute(base_query, (to_db_readable_date(user_birthday), user_id))
+
+        return True
+    except Exception as error:
+        print("Error in set_birthday: ", error)
         connection.rollback()
         return None
 

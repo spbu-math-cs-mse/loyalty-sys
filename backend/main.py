@@ -11,11 +11,12 @@ from postgress.common import (
     insert_purchase_info,
     get_product_statistic,
     get_purchases_count,
-    get_user_discount,
+    get_loyalty_level,
     get_average_purchase,
     get_visits_count,
     get_all_products,
     set_gender,
+    set_birthday,
     set_user_discount,
 )
 
@@ -216,6 +217,7 @@ def get_products():
 def get_user_discount_api(user_id: int):
     try:
         connection = connection_pool.getconn()
+        # TODO: update
         result = get_user_discount(connection, user_id)
 
         if result is None:
@@ -242,6 +244,7 @@ def set_user_discount_api(user_id: int):
         if not discount_id:
             return jsonify({"message": Message.NO_DISCOUNT.value}), 400
 
+        # TODO: change to update_user_discount here
         result = set_user_discount(connection, user_id, discount_id)
 
         if result is None:
@@ -270,8 +273,14 @@ def get_user_total_purchases_api(user_id: int):
 
 @app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
 def get_user_loyalty_level_api(user_id: int):
-    loyalty_level = "Серебряный"  # TODO: implement database function
-    return jsonify({"loyalty_level": loyalty_level})
+
+    try:
+        connection = connection_pool.getconn()
+        loyalty_level = get_loyalty_level(user_id)
+        return jsonify({"loyalty_level": loyalty_level})
+    finally:
+        connection_pool.putconn(connection)
+
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])
@@ -301,8 +310,14 @@ def update_user_birthday_api(user_id: int):
     if not birthday:
         return jsonify({"message": Message.BIRTHDAY_REQUIRED.value}), 400
 
-    # TODO: implement handling birthday in database
-    return jsonify(f"ok for {user_id}"), 200
+    try:
+        connection = connection_pool.getconn()
+        if set_birthday(connection, user_id, birthday):
+            return jsonify({"message": Message.BIRTHDAY_UPDATED.value}), 200
+        return jsonify({"message": Message.INVALID_BIRTHDAY.value}), 400
+    finally:
+        connection_pool.putconn(connection)
+
 
 
 if __name__ == "__main__":
