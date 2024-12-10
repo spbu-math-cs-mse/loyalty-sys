@@ -49,6 +49,7 @@ def send_info(message):
         loyalty_levels = get_loyalty_levels(user_id)
 
         info_message = create_info_message(total_purchases, loyalty_levels)
+
         bot.send_message(message.chat.id, info_message)
     except requests.exceptions.RequestException as e:
         bot.send_message(message.chat.id, f"{BotMessages.BACKEND_ERROR.value} ({e})")

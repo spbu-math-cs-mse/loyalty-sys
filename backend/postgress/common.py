@@ -389,7 +389,7 @@ def get_average_purchase(connection, start_date, end_date):
         joined_purchase += ") as filtered "
 
         joined_purchase += (
-            "on (filtered.id = purchase_info.product_id)) as joined_purchase"
+            "on (filtered.id = purchase_info.purchase_id)) as joined_purchase"
         )
 
         sum_by_purchase = f"""
@@ -415,6 +415,75 @@ def get_average_purchase(connection, start_date, end_date):
         return average_check
     except Exception as error:
         print("Error in get_average_purchase: ", error)
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_purchases_sum(connection, start_date, end_date, user_id=None):
+    try:
+        cursor = connection.cursor()
+
+        joined_purchase = "(SELECT purchase_id, quantity, product_id from purchase_info join (SELECT id from purchase WHERE 1=1"
+
+        if start_date is not None:
+            joined_purchase += " AND order_date >= %s"
+        if end_date is not None:
+            joined_purchase += " AND order_date <= %s"
+        if user_id is not None:
+            joined_purchase += " AND user_id = %s"
+        joined_purchase += ") as filtered "
+
+        joined_purchase += (
+            "on (filtered.id = purchase_info.purchase_id)) as joined_purchase"
+        )
+
+        sum_by_purchase = f"""
+            (SELECT purchase_id, sum(price_copeck * quantity) as s from 
+            {joined_purchase}
+            join products on(products.id = product_id)
+            GROUP BY purchase_id) as sum_by_purchase
+        """
+
+        result = f"SELECT COALESCE(sum(s), 0) from {sum_by_purchase}"
+
+        params = []
+        if start_date is not None:
+            params.append(to_db_readable_date(start_date))
+        if end_date is not None:
+            params.append(to_db_readable_date(end_date))
+        if user_id is not None:
+            params.append(user_id)
+
+        cursor.execute(result, tuple(params))
+
+        # fetchone returns row with 1 element
+        purchases_count = cursor.fetchone()[0]
+        return purchases_count
+    except Exception as error:
+        print("Error in get_purchases_sum: ", error)
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_visitors_count(connection):
+    try:
+        cursor = connection.cursor()
+
+        base_query = "SELECT COALESCE(SUM(1), 0) FROM users WHERE 1=1"
+
+        cursor.execute(base_query)
+
+        # fetchone returns row with 1 element
+        users_count = cursor.fetchone()[0]
+        return users_count
+    except Exception as error:
+        print("Error in get_visitors_count: ", error)
         return None
 
     finally:
