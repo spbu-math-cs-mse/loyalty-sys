@@ -44,6 +44,14 @@ const routes = [
     },
   },
   {
+    path: "/login",
+    name: "login",
+    component: () => import("../views/LoginView.vue"),
+    meta: {
+      title: "Вход",
+    },
+  },
+  {
     path: "/404",
     name: "notfound",
     component: () => import("../views/PageNotFound.vue"),
@@ -72,8 +80,21 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || "Система лояльности";
-  next();
+  const auth = JSON.parse(localStorage.getItem("auth")) || false;
+  console.log(`Перехожу на маршрут: ${to.fullPath}`);
+  
+  if (to.name !== 'login' && !auth) {
+    next({ name: "login" })
+  }
+  else if (to.name === 'login' && auth) {
+    next({ name: "home" })
+  }
+  else {
+    next();
+    document.title = to.meta.title || "Система лояльности";
+  }
+  
+
 });
 
 export default router;

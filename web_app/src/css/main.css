@@ -52,6 +52,9 @@ body{
 .aside{
     height: 100dvh;
 }
+.aside::-webkit-scrollbar {
+    width: 2px;
+}
 
 .toggle__switch{
     transform: scale(0.8);

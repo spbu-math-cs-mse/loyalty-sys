@@ -5,7 +5,11 @@ import Drawer from "primevue/drawer";
 import Toast from "primevue/toast";
 import ToggleButton from "primevue/togglebutton";
 
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useUserStore } from '@/stores/user'
+import router from "./router";
+
+const user = useUserStore();
 
 let mobileMenuFixed = ref(false);
 let desktopMenuFixed = ref(false);
@@ -28,6 +32,17 @@ const menuItems = ref([
     icon: "pi pi-user-plus",
     route: "/privilege",
     command: () => closeMenu(),
+  },
+  {
+    label: "Выйти",
+    icon: "pi pi-sign-out",
+    route: "/login",
+    command: () => { 
+      closeMenu()
+      localStorage.removeItem("auth")
+      user.auth = false;
+      router.push("/login")
+    },
   },
   // Allowed comments, will be needed later
   // {
@@ -73,7 +88,8 @@ const { width, height } = useBreakpoints();
 
 <template>
   <Toast />
-  <div v-if="width < menuExpandWidth" class="container">
+
+  <div v-show="(width < menuExpandWidth) && user.auth" class="container">
     <header
       class="header p-3 px-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
     >
@@ -130,63 +146,65 @@ const { width, height } = useBreakpoints();
   </div>
 
   <div class="container flex">
-    <Menu
-      v-if="width >= menuExpandWidth"
-      :model="menuItems"
-      class="aside overflow-scroll sticky p-2 top-0 fadeinleft animation-ease-out animation-duration-400 shadow-1 border-none"
-      :class="{ 'min-w-min': !desktopMenuFixed }"
-    >
-      <template #start>
-        <div
-          v-if="width >= menuExpandWidth"
-          class="flex"
-          :class="{
-            'pl-2': desktopMenuFixed,
-            'justify-content-center': !desktopMenuFixed,
-          }"
-        >
-          <ToggleButton
-            v-model="desktopMenuFixed"
-            onLabel=" "
-            offLabel=" "
-            onIcon="pi pi-arrow-left"
-            size="small"
-            offIcon="pi pi-arrow-right"
-            class="toggle__switch"
-            aria-label="Do you confirm"
-          />
-        </div>
-        <img
-          class="logo block mb-1 mt-2"
-          src="./assets/logo.png"
-          alt="Система лояльности"
-        />
-      </template>
-      <template #item="{ item, props }">
-        <router-link
-          v-if="item.route"
-          v-slot="{ href, navigate }"
-          :to="item.route"
-          custom
-        >
-          <a
-            :href="href"
-            v-bind="props.action"
-            @click="navigate"
-            v-tooltip="{ value: desktopMenuFixed ? '' : item.label }"
-            :class="{ 'flex justify-content-center': !desktopMenuFixed }"
-            class="py-2"
+      
+    <div v-show="(width >= menuExpandWidth) && user.auth">
+      <Menu
+        :model="menuItems"
+        class="aside overflow-scroll sticky p-2 top-0 fadeinleft animation-ease-out animation-duration-400 shadow-1 border-none"
+        :class="{ 'min-w-min': !desktopMenuFixed }"
+      >
+        <template #start>
+          <div
+            class="flex"
+            :class="{
+              'pl-2': desktopMenuFixed,
+              'justify-content-center': !desktopMenuFixed,
+            }"
           >
+            <ToggleButton
+              v-model="desktopMenuFixed"
+              onLabel=" "
+              offLabel=" "
+              onIcon="pi pi-arrow-left"
+              size="small"
+              offIcon="pi pi-arrow-right"
+              class="toggle__switch"
+              aria-label="Do you confirm"
+            />
+          </div>
+          <img
+            class="logo block mb-1 mt-2"
+            src="./assets/logo.png"
+            alt="Система лояльности"
+          />
+        </template>
+  
+        <template #item="{ item, props }">
+          <router-link
+            v-if="item.route"
+            v-slot="{ href, navigate }"
+            :to="item.route"
+            custom
+          >
+            <a
+              :href="href"
+              v-bind="props.action"
+              @click="navigate"
+              v-tooltip="{ value: desktopMenuFixed ? '' : item.label }"
+              :class="{ 'flex justify-content-center': !desktopMenuFixed }"
+              class="py-2"
+            >
+              <span class="text-lg" :class="item.icon" />
+              <span v-if="desktopMenuFixed" class="ml-2">{{ item.label }}</span>
+            </a>
+          </router-link>
+          <a v-else :href="item.url" :target="item.target" v-bind="props.action">
             <span class="text-lg" :class="item.icon" />
-            <span v-if="desktopMenuFixed" class="ml-2">{{ item.label }}</span>
+            <span class="ml-2">{{ item.label }}</span>
           </a>
-        </router-link>
-        <a v-else :href="item.url" :target="item.target" v-bind="props.action">
-          <span class="text-lg" :class="item.icon" />
-          <span class="ml-2">{{ item.label }}</span>
-        </a>
-      </template>
-    </Menu>
+        </template>
+      </Menu>
+    </div>
 
     <div class="p-2 w-full">
       <Transition name="fadeIn">
