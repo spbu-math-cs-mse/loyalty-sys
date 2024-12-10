@@ -230,7 +230,7 @@ def get_average_purchase(connection, start_date, end_date):
         joined_purchase += ") as filtered "
 
         joined_purchase += (
-            "on (filtered.id = purchase_info.product_id)) as joined_purchase"
+            "on (filtered.id = purchase_info.purchase_id)) as joined_purchase"
         )
 
         sum_by_purchase = f"""
