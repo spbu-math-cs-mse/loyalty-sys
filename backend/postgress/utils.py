@@ -1,8 +1,8 @@
 import datetime
 from psycopg2 import sql
 
-def to_db_readable_date(date):
-    return datetime.datetime.strptime(date, "%Y-%m").date()
+def to_db_readable_date(date, without_day = True):
+    return datetime.datetime.strptime(date, "%Y-%m" if without_day else "%Y-%m-%d" ).date()
 
 def recreate_table(connection, table_name, table_schema, should_drop=True):
     try:

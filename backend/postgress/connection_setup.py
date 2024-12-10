@@ -1,11 +1,12 @@
 import os
 import psycopg2
+from  psycopg2 import pool
 from dotenv import load_dotenv
 
 
 MAX_POOL_CONNECTIONS = 50
 
-def c():
+def get_connections_pool():
     load_dotenv()
     return psycopg2.pool.SimpleConnectionPool(
         1,

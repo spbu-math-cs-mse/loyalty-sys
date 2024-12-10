@@ -1,4 +1,4 @@
-from utils import (
+from postgress.utils import (
     to_db_readable_date,
 )
 from psycopg2 import sql
@@ -355,11 +355,13 @@ def get_loyalty_level(connection, user_id):
                 dt.is_enabled = TRUE;
         """
 
-        cursor.execute(base_query, (user_id))
+        cursor.execute(base_query, [user_id])
 
-        return cursor.fetchall()
+        result = [(type_name, name, value, threshold) for type_name, name, value, threshold in cursor.fetchall()]
+
+        return result
     except Exception as error:
-        print("Error in get_user_discount: ", error)
+        print("Error in get_loyalty_level: ", error)
         return None
 
     finally:
@@ -411,14 +413,38 @@ def set_birthday(connection, user_id, user_birthday):
         cursor = connection.cursor()
 
         base_query = "UPDATE users SET birth_date = %s WHERE id = %s"
+        print(user_birthday)
 
-        cursor.execute(base_query, (to_db_readable_date(user_birthday), user_id))
+        cursor.execute(base_query, (to_db_readable_date(user_birthday, False), user_id))
 
         return True
     except Exception as error:
         print("Error in set_birthday: ", error)
         connection.rollback()
         return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+
+def add_admin(connection, login, password, level):
+    try:
+        created = False
+        cursor = connection.cursor()
+        
+        insert_admin_query = sql.SQL(
+            "INSERT INTO admins (login, password, level) VALUES (%s, %s, %s) RETURNING *;"
+        )
+        cursor.execute(insert_admin_query, (login, password, level))
+
+        created = True
+        return user_id, created
+    except Exception as error:
+        print("Error in find_or_create_user: ", error)
+        connection.rollback()
+        return None, False
 
     finally:
         if cursor:

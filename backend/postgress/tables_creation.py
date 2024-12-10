@@ -1,4 +1,4 @@
-from enum import Enum
+from enums import (Gender, DiscountType)
 from psycopg2 import sql
 
 from utils import (
@@ -10,13 +10,6 @@ from connection_setup import get_connections_pool
 
 # ================= GENDER ==================
 
-# TODO: add undefined
-class Gender(Enum):
-    MAN = "man"
-    WOMAN = "woman"
-    UNDEFINED = "undefined"
-
-
 def recreate_enum_gender(connection, should_drop=True):
     recreate_enum(
         connection,
@@ -27,11 +20,6 @@ def recreate_enum_gender(connection, should_drop=True):
 
 
 # ================= DISCOUNT ==================
-
-# TODO: rewrite from ENUM to new table
-class DiscountType(Enum):
-    POINTS = "points"
-    SALE = "sale"
 
 def fill_discount_type_table(connection):
     try:
@@ -100,12 +88,29 @@ def recreate_users_table(connection, should_drop=True):
         "users",
         """id SERIAL PRIMARY KEY,
         chat_id VARCHAR(255) NOT NULL,
-        user_gender gender NOT NULL,
-        birth_date DATE NULL,
-        FOREIGN KEY (discount_id) REFERENCES discounts (id)
+        user_gender gender NULL,
+        birth_date DATE NULL
         """,
         should_drop,
     )
+
+# ================= ADMIN ===================
+
+def recreate_admins_table(connection, should_drop=True):
+    recreate_table(
+        connection,
+        "admins",
+        """id SERIAL PRIMARY KEY,
+        login VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        level SMALLINT NOT NULL,
+        """,
+        should_drop,
+    )
+
+    if (should_drop):
+        add_admin("admin", "hash(admin)", 0)
+
 
 # ================= PRODUCT ===================
 
@@ -152,13 +157,13 @@ def recreate_products_table(connection, should_drop=True, fill_table=True):
 def fill_categories_table(connection):
     try:
         cursor = connection.cursor()
-        insert_user_query = sql.SQL(
+        insert_query = sql.SQL(
             "INSERT INTO categories (label) VALUES (%s);"
         )
 
-        cursor.execute(insert_user_query, ("Food"))
-        cursor.execute(insert_user_query, ("Device"))
-        cursor.execute(insert_user_query, ("Furniture"))
+        cursor.execute(insert_query, ["Food"])
+        cursor.execute(insert_query, ["Device"])
+        cursor.execute(insert_query, ["Furniture"])
     except Exception as error:
         print(f"Error occurred in fill_categories_table: {error}")
     finally:
@@ -170,8 +175,8 @@ def recreate_categories_table(connection, should_drop=True, fill_table=True):
     recreate_table(
         connection,
         "categories",
-        """ id SERIAL PRIMARY KEY,
-            label VARCHAR(255) NOT NULL,
+        """id SERIAL PRIMARY KEY,
+        label VARCHAR(255) NOT NULL
         """,
         should_drop,
     )
@@ -216,12 +221,24 @@ def recreate_points_table(connection, should_drop=True):
         "points",
         """id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
-            number BIGINT CHECK (price_copeck >= 1),
+            number BIGINT CHECK (number >= 1),
             lifetime DATE NULL,
             FOREIGN KEY (user_id) REFERENCES users (id)
         """,
         should_drop,
     )
+
+def delete_enum(connection, enum_name):
+    try:
+        cursor = connection.cursor()
+        drop_type_query = sql.SQL(f"DROP TABLE IF EXISTS {enum_name} CASCADE")
+        cursor.execute(drop_type_query)
+        connection.commit()
+    except Exception as error:
+        print(f"Error occurred in recreate_type_gender {enum_name}: {error}")
+    finally:
+        if cursor:
+            cursor.close()
 
 if __name__ == "__main__":
     pool = get_connections_pool()
@@ -233,13 +250,13 @@ if __name__ == "__main__":
     recreate_discount_table(connection)
     recreate_user_to_discount_table(connection)
 
-    recreate_users_table(connection)
-
     recreate_categories_table(connection)
     recreate_products_table(connection)
 
     recreate_purchase_table(connection)
     recreate_purchase_info_table(connection)
+
+    recreate_users_table(connection)
 
     recreate_points_table(connection)
 

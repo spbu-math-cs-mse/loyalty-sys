@@ -4,9 +4,12 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from message import Message
 
+from utils import validate_date, get_gender
+
+from postgress.connection_setup import get_connections_pool
+
 from postgress.common import (
     find_or_create_user,
-    get_connections_pool,
     insert_purchase,
     insert_purchase_info,
     get_product_statistic,
@@ -17,10 +20,8 @@ from postgress.common import (
     get_all_products,
     set_gender,
     set_birthday,
-    set_user_discount,
+    update_user_discount,
 )
-
-from utils import validate_date, get_gender, get_discount_type
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret"
@@ -218,7 +219,7 @@ def get_user_discount_api(user_id: int):
     try:
         connection = connection_pool.getconn()
         # TODO: update
-        result = get_user_discount(connection, user_id)
+        result = get_loyalty_level(connection, user_id)
 
         if result is None:
             return (
@@ -226,7 +227,7 @@ def get_user_discount_api(user_id: int):
                 200,
             )
 
-        discount_type, level = result
+        discount_type, level = "Скидка", "Не определён" if len(result) == 0 else result[0]
 
         return (
             jsonify({"type": discount_type, "value": level}),
@@ -276,7 +277,7 @@ def get_user_loyalty_level_api(user_id: int):
 
     try:
         connection = connection_pool.getconn()
-        loyalty_level = get_loyalty_level(user_id)
+        loyalty_level = get_loyalty_level(connection, user_id)
         return jsonify({"loyalty_level": loyalty_level})
     finally:
         connection_pool.putconn(connection)
