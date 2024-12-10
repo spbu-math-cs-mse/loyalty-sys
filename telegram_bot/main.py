@@ -45,13 +45,11 @@ def start_message(message):
 def send_info(message):
     try:
         user_id = get_user_id(message.chat.id)
-        discount_info = get_discount_info(user_id)
         total_purchases = get_total_purchases(user_id)
-        loyalty_level = get_loyalty_level(user_id)
+        loyalty_levels = get_loyalty_levels(user_id)
 
-        info_message = create_info_message(
-            discount_info, total_purchases, loyalty_level
-        )
+        info_message = create_info_message(total_purchases, loyalty_levels)
+
         bot.send_message(message.chat.id, info_message)
     except requests.exceptions.RequestException as e:
         bot.send_message(message.chat.id, f"{BotMessages.BACKEND_ERROR.value} ({e})")
@@ -209,19 +207,13 @@ def get_user_id(chat_id):
         raise Exception(f"{BotMessages.USER_ID_ERROR.value} {response.text}")
 
 
-def get_discount_info(user_id):
-    response = requests.get(f"{BACKEND_URL}/user/{user_id}/discount")
-    response.raise_for_status()
-    return response.json()
-
-
 def get_total_purchases(user_id):
     response = requests.get(f"{BACKEND_URL}/user/{user_id}/total_purchases")
     response.raise_for_status()
     return response.json()["total_purchases"]
 
 
-def get_loyalty_level(user_id):
+def get_loyalty_levels(user_id):
     response = requests.get(f"{BACKEND_URL}/user/{user_id}/loyalty_level")
     response.raise_for_status()
     return response.json()["loyalty_level"]

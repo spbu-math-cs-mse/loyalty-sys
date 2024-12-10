@@ -69,7 +69,7 @@ const getMoneySymbol = () => {
         class="card__icon text-lg card-icon pi mr-2"
         :class="beforeIcon"
       ></i>
-      <span class="card__number text-2xl font-medium"
+      <span class="card__number text-xl font-medium"
         ><span>{{ getMoneySymbol() }}</span> {{ currentNumber }}</span
       >
       <i class="card__icon text-lg card-icon pi ml-3" :class="afterIcon"></i>
