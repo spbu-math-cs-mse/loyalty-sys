@@ -239,8 +239,8 @@ const setChartLineData = () => {
       .get("http://84.201.143.213:5000/data/values", {
         params: {
           product_id: selectedProductList.value[i].id,
-          start_date: productDates.value[0].toISOString().substring(0, 7),
-          end_date: productDates.value[1].toISOString().substring(0, 7),
+          start_date: formatDateToYYYYMM(productDates.value[0]),
+          end_date: formatDateToYYYYMM(productDates.value[1]),
         },
       })
       .then((response) => {
@@ -377,13 +377,13 @@ const toast = useToast();
       <div class="flex flex-column gap-4 w-full lg:w-auto">
         <ChartNumberDisplay
           title="Cумма покупок"
-          :number="totalPurchases"
+          :number="(totalPurchases/100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
         <ChartNumberDisplay
           title="Средний чек"
-          :number="averageCheck"
+          :number="(averageCheck/100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
