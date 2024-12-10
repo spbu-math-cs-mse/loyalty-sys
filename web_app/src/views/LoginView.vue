@@ -32,12 +32,12 @@ const errorTypes = {
 }
 
 const onFormSubmit = () => {
-  if (formData.value.username === '') {
+  if (formData.value.username.trim() === '') {
     toast.add({ severity: 'error', summary: 'Ошибка', detail: toastConfig.nullLogin, life: 3000 });
     return;
   }
 
-  if (formData.value.password === '') {
+  if (formData.value.password.trim() === '') {
     toast.add({ severity: 'error', summary: 'Ошибка', detail: toastConfig.nullPassword, life: 3000 });
     return;
   }
