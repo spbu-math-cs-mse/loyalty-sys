@@ -209,7 +209,7 @@ def get_products():
         return jsonify(
             [
                 {"id": id, "label": label, "price_copeck": price}
-                for id, label, price in result
+                for id, label, price, category in result
             ]
         )
     finally:
