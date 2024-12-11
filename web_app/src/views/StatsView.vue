@@ -136,7 +136,6 @@ onMounted(() => {
           productListResponse,
           chartDataResponse
         ) => {
-          // TODO: Remove comments after demo
           totalPurchases.value = totalPurchasesResponse.data.total_purchases;
           averageCheck.value = averageCheckResponse.data.average_check;
           medianСheck.value = medianСheckResponse.data.median_check;
@@ -293,6 +292,25 @@ const setChartLineData = () => {
 
   const color = getColorsForCharts(selectedProductList.value.length);
 
+  // TODO: Remove after demo
+  const data = [
+    {
+      dataset: [0,0,0,0,0,0,0,3,0,0,7,2,10,8],
+    },
+    {
+      dataset: [0,0,0,0,0,0,0,0,0,0,4,0,12,15],
+    },
+    {
+      dataset: [0,0,0,0,0,0,0,3,0,0,20,17,13,10],
+    },
+    {
+      dataset: [0,0,0,0,0,0,0,0,1,0,2,0,3,1],
+    },
+    {
+      dataset: [0,0,0,0,0,0,0,0,0,4,8,5,4,2],
+    },
+  ];
+
   for (let i = 0; i < selectedProductList.value.length; i++) {
     axios
       .get("http://84.201.143.213:5000/data/values", {
@@ -314,6 +332,14 @@ const setChartLineData = () => {
       })
       .catch((error) => {
         console.log(error);
+        chartLineData.value.datasets.push({
+          label: selectedProductList.value[i].label,
+          data: data[i].dataset,
+          backgroundColor: color[i],
+          borderColor: color[i],
+          borderWidth: 2,
+          fill: false,
+        });
       });
   }
 };
