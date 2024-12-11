@@ -14,6 +14,7 @@ import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 
 const axios = require("axios");
 const primevue = usePrimeVue();
+const languageConfig = primevue.config.locale;
 
 const productList = ref([]);
 const selectedProductList = ref([]);
@@ -74,6 +75,10 @@ const fetchDate = ref({
   end: today.toISOString().substring(0, 7),
 });
 
+const formatDateToYYYYMM = (date) => {
+    return date.toLocaleString('en-CA', { year: 'numeric', month: '2-digit' }).replace('/', '-');
+}
+
 const getMonthsInRange = (fromDate, toDate) => {
   if (!fromDate || !toDate) {
     return [];
@@ -96,11 +101,13 @@ const getMonthsInRange = (fromDate, toDate) => {
 };
 
 onMounted(() => {
-  chartDoughnutOptions.value = setChartDoughnutOptions();
-  chartDoughnutConfig.value = setChartDoughnutConfig();
-
+  chartMoreBuysOptions.value = setChartDoughnutOptions("Кто чаще покупает");
+  chartBirthdayOptions.value = setChartDoughnutOptions("Дни рождения");
+  chartCategoryOptions.value = setChartDoughnutOptions("Покупки в категориях");
+  
   chartLineOptions.value = setChartLineOptions();
   chartLineConfig.value = setChartDoughnutConfig();
+  chartDoughnutConfig.value = setChartDoughnutConfig();
 
   axios
     .all([
@@ -108,6 +115,9 @@ onMounted(() => {
         params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/average_check", {
+        params: fetchDate,
+      }),
+      axios.get("http://84.201.143.213:5000/data/median_check", {
         params: fetchDate,
       }),
       axios.get("http://84.201.143.213:5000/data/visitor_count", {
@@ -121,14 +131,17 @@ onMounted(() => {
         (
           totalPurchasesResponse,
           averageCheckResponse,
+          medianСheckResponse,
           visitorCountResponse,
           productListResponse,
           chartDataResponse
         ) => {
+          // TODO: Remove comments after demo
           totalPurchases.value = totalPurchasesResponse.data.total_purchases;
           averageCheck.value = averageCheckResponse.data.average_check;
+          medianСheck.value = medianСheckResponse.data.median_check;
           visitorCount.value = visitorCountResponse.data.visitor_count;
-          chartDataDataset.value = chartDataResponse.data;
+          chartMoreBuysDataset.value = chartDataResponse.data;
 
           productList.value = productListResponse.data;
         }
@@ -141,12 +154,20 @@ onMounted(() => {
 
 const totalPurchases = ref();
 const averageCheck = ref();
+const medianСheck = ref();
 const visitorCount = ref();
 
-const chartData = ref();
-const chartDataDataset = ref([]);
+const chartMoreBuysDataset = ref([]);
+const chartBirthdayDataset = ref([]);
+const chartCategoryDataset = ref([]);
 
-const chartDoughnutOptions = ref();
+const chartMoreBuysData = ref();
+const chartBirthdayData = ref();
+const chartCategoryData = ref();
+
+const chartMoreBuysOptions = ref();
+const chartBirthdayOptions = ref();
+const chartCategoryOptions = ref();
 const chartDoughnutConfig = ref();
 
 const chartLineOptions = ref();
@@ -196,7 +217,7 @@ const setChartDoughnutConfig = () => {
   };
 };
 
-const setChartDoughnutData = () => {
+const setMoreBuysDoughnutData = () => {
   const colors = [
     $dt("cyan.500").value,
     $dt("orange.500").value,
@@ -208,11 +229,11 @@ const setChartDoughnutData = () => {
     $dt("gray.400").value,
   ];
 
-  chartData.value = {
+  chartMoreBuysData.value = {
     labels: ["Мужчины", "Женщины", "Неизвестно"],
     datasets: [
       {
-        data: chartDataDataset,
+        data: chartMoreBuysDataset,
         backgroundColor: colors,
         hoverBackgroundColor: hoverColors,
         borderRadius: 2,
@@ -220,7 +241,45 @@ const setChartDoughnutData = () => {
     ],
   };
 
-  return chartData.value;
+  return chartMoreBuysData.value;
+};
+
+const setBirthdayDoughnutData = () => {
+  const colors = getColorsForCharts(12, 500);
+  const hoverColors = getColorsForCharts(12, 400);
+
+  chartBirthdayData.value = {
+    labels: languageConfig.monthNames,
+    datasets: [
+      {
+        data: chartBirthdayDataset,
+        backgroundColor: colors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius: 2,
+      },
+    ],
+  };
+
+  return chartBirthdayData.value;
+};
+
+const setCategoryDoughnutData = () => {
+  const colors = getColorsForCharts(3, 500);
+  const hoverColors = getColorsForCharts(3, 400);
+
+  chartCategoryData.value = {
+    labels: ['Food', 'Devices', 'Furniture'],
+    datasets: [
+      {
+        data: chartCategoryDataset,
+        backgroundColor: colors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius: 2,
+      },
+    ],
+  };
+
+  return chartCategoryData.value;
 };
 
 const setChartLineData = () => {
@@ -269,7 +328,7 @@ const setChartLineOptions = () => {
   );
 
   const a = setChartDoughnutOptions();
-  a.plugins.title.display = false;
+  // a.plugins.title.display = false;
   a.layout.padding.left = 0;
   a.scales = {
     x: {
@@ -294,7 +353,7 @@ const setChartLineOptions = () => {
   return a;
 };
 
-const setChartDoughnutOptions = () => {
+const setChartDoughnutOptions = (str = "") => {
   const documentStyle = getComputedStyle(document.documentElement);
   const textColor = documentStyle.getPropertyValue("--p-text-color");
   const backgroundColor = documentStyle.getPropertyValue("--p-menu-background");
@@ -312,8 +371,8 @@ const setChartDoughnutOptions = () => {
         },
       },
       title: {
-        display: true,
-        text: "Кто чаще покупает",
+        display: !!str,
+        text: str,
         align: "start",
         color: textColor,
         padding: 8,
@@ -353,6 +412,25 @@ const setChartDoughnutOptions = () => {
 };
 
 const toast = useToast();
+
+// TODO: Remove after demo
+totalPurchases.value = 132797220;
+averageCheck.value = 2567500;
+medianСheck.value = 1875000;
+visitorCount.value = 14;
+chartMoreBuysDataset.value = [14, 27, 43];
+chartBirthdayDataset.value = [1, 1, 1, 0, 2, 0, 1, 1, 3, 1, 2, 1];
+chartCategoryDataset.value = [56, 18, 10];
+
+axios.get("http://84.201.143.213:5000/data/products")
+  .then((response) => {
+    productList.value = response.data;
+    console.log(response);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+
 </script>
 
 <template>
@@ -365,16 +443,40 @@ const toast = useToast();
       <div class="border-round-lg overflow-hidden shadow-1 bg-white">
         <Chart
           type="doughnut"
-          :width="500"
+          :width="400"
           :height="300"
-          :data="setChartDoughnutData()"
+          :data="setMoreBuysDoughnutData()"
           :plugins="[chartDoughnutConfig]"
-          :options="chartDoughnutOptions"
+          :options="chartMoreBuysOptions"
           class=""
         />
       </div>
 
-      <div class="flex flex-column gap-4 w-full lg:w-auto">
+      <div class="border-round-lg overflow-hidden shadow-1 bg-white">
+        <Chart
+          type="doughnut"
+          :width="400"
+          :height="300"
+          :data="setBirthdayDoughnutData()"
+          :plugins="[chartDoughnutConfig]"
+          :options="chartBirthdayOptions"
+          class=""
+        />
+      </div>
+
+      <div class="border-round-lg overflow-hidden shadow-1 bg-white">
+        <Chart
+          type="doughnut"
+          :width="400"
+          :height="300"
+          :data="setCategoryDoughnutData()"
+          :plugins="[chartDoughnutConfig]"
+          :options="chartCategoryOptions"
+          class=""
+        />
+      </div>
+
+      <div class="flex flex-wrap gap-4 w-full">
         <ChartNumberDisplay
           title="Cумма покупок"
           :number="(totalPurchases/100).toFixed(2)"
@@ -384,6 +486,12 @@ const toast = useToast();
         <ChartNumberDisplay
           title="Средний чек"
           :number="(averageCheck/100).toFixed(2)"
+          money="rub"
+          afterIcon=""
+        />
+        <ChartNumberDisplay
+          title="Медианный чек"
+          :number="(medianСheck/100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
