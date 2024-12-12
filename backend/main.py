@@ -4,24 +4,26 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from message import Message
 
+from utils import validate_date, get_gender
+
+from postgress.connection_setup import get_connections_pool
+
 from postgress.common import (
     find_or_create_user,
-    get_connections_pool,
     insert_purchase,
     insert_purchase_info,
     get_product_statistic,
     get_purchases_count,
+    get_loyalty_level,
     get_purchases_sum,
-    get_user_discount,
     get_average_purchase,
     get_visits_count,
     get_visitors_count,
     get_all_products,
     set_gender,
-    set_user_discount,
+    set_birthday,
+    update_user_discount,
 )
-
-from utils import validate_date, get_gender, get_discount_type
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret"
@@ -34,6 +36,16 @@ connection_pool = None
 with app.app_context():
     connection_pool = get_connections_pool()
 
+@app.route("/privileges", methods=["GET"])
+def get_privileges():
+    privileges = {}  # TODO: implement database function
+    return jsonify(privileges), 200
+
+
+@app.route("/privileges", methods=["POST"])
+def send_privileges():
+    data = request.json  # TODO: implement database function
+    return jsonify({"message": "Feedback"}), 200
 
 @app.route("/user", methods=["POST"])
 def create_user():
@@ -197,7 +209,7 @@ def get_products():
         return jsonify(
             [
                 {"id": id, "label": label, "price_copeck": price}
-                for id, label, price in result
+                for id, label, price, category in result
             ]
         )
     finally:
@@ -208,7 +220,8 @@ def get_products():
 def get_user_discount_api(user_id: int):
     try:
         connection = connection_pool.getconn()
-        result = get_user_discount(connection, user_id)
+        # TODO: update
+        result = get_loyalty_level(connection, user_id)
 
         if result is None:
             return (
@@ -216,7 +229,7 @@ def get_user_discount_api(user_id: int):
                 200,
             )
 
-        discount_type, level = result
+        discount_type, level = "Скидка", "Не определён" if len(result) == 0 else result[0]
 
         return (
             jsonify({"type": discount_type, "value": level}),
@@ -234,6 +247,7 @@ def set_user_discount_api(user_id: int):
         if not discount_id:
             return jsonify({"message": Message.NO_DISCOUNT.value}), 400
 
+        # TODO: change to update_user_discount here
         result = set_user_discount(connection, user_id, discount_id)
 
         if result is None:
@@ -262,8 +276,14 @@ def get_user_total_purchases_api(user_id: int):
 
 @app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
 def get_user_loyalty_level_api(user_id: int):
-    loyalty_level = "Серебряный"  # TODO: implement database function
-    return jsonify({"loyalty_level": loyalty_level})
+
+    try:
+        connection = connection_pool.getconn()
+        loyalty_level = get_loyalty_level(connection, user_id)
+        return jsonify({"loyalty_level": loyalty_level})
+    finally:
+        connection_pool.putconn(connection)
+
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])
@@ -293,8 +313,14 @@ def update_user_birthday_api(user_id: int):
     if not birthday:
         return jsonify({"message": Message.BIRTHDAY_REQUIRED.value}), 400
 
-    # TODO: implement handling birthday in database
-    return jsonify(f"ok for {user_id}"), 200
+    try:
+        connection = connection_pool.getconn()
+        if set_birthday(connection, user_id, birthday):
+            return jsonify({"message": Message.BIRTHDAY_UPDATED.value}), 200
+        return jsonify({"message": Message.INVALID_BIRTHDAY.value}), 400
+    finally:
+        connection_pool.putconn(connection)
+
 
 
 if __name__ == "__main__":

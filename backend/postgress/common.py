@@ -1,214 +1,7 @@
-import os
-import datetime
-
-from enum import Enum
-
-import psycopg2
-from psycopg2 import sql, pool
-from dotenv import load_dotenv
-
-
-MAX_POOL_CONNECTIONS = 50
-
-
-def to_db_readable_date(date):
-    return datetime.datetime.strptime(date, "%Y-%m").date()
-
-
-def get_connections_pool():
-    load_dotenv()
-    return psycopg2.pool.SimpleConnectionPool(
-        1,
-        MAX_POOL_CONNECTIONS,
-        dbname=os.getenv("DB_NAME"),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        host=os.getenv("DB_HOSTS"),
-        port=os.getenv("DB_PORT"),
-    )
-
-
-def recreate_table(connection, table_name, table_schema, should_drop=True):
-    try:
-        cursor = connection.cursor()
-
-        if should_drop:
-            drop_table_query = sql.SQL(f"DROP TABLE IF EXISTS {table_name} CASCADE")
-            cursor.execute(drop_table_query)
-
-        create_table_query = sql.SQL(
-            f"CREATE TABLE IF NOT EXISTS {table_name} ({table_schema});"
-        )
-
-        cursor.execute(create_table_query)
-
-        connection.commit()
-    except Exception as error:
-        print(f"Error occurred in recreate_table {table_name}: {error}")
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def recreate_enum(connection, enum_name, enum_values, should_drop):
-    try:
-        cursor = connection.cursor()
-
-        if should_drop:
-            drop_type_query = sql.SQL(f"DROP TYPE IF EXISTS {enum_name} CASCADE")
-            cursor.execute(drop_type_query)
-
-        create_type_query = sql.SQL(f"CREATE TYPE {enum_name} AS ENUM ({enum_values})")
-
-        cursor.execute(create_type_query)
-
-        connection.commit()
-    except Exception as error:
-        print(f"Error occurred in recreate_type_gender {enum_name}: {error}")
-    finally:
-        if cursor:
-            cursor.close()
-
-
-class Gender(Enum):
-    MAN = "man"
-    WOMAN = "woman"
-
-
-def recreate_enum_gender(connection, should_drop=True):
-    recreate_enum(
-        connection,
-        "gender",
-        f"{','.join([f"'{gender.value}'" for gender in Gender])}",
-        should_drop,
-    )
-
-
-class DiscountType(Enum):
-    POINTS = "points"
-    SALE = "sale"
-
-
-def recreate_enum_discount_type(connection, should_drop=True):
-    recreate_enum(
-        connection,
-        "discount_type",
-        f"{','.join([f"'{type.value}'" for type in DiscountType])}",
-        should_drop,
-    )
-
-
-def recreate_users_table(connection, should_drop=True):
-    recreate_table(
-        connection,
-        "users",
-        """id SERIAL PRIMARY KEY,
-        chat_id VARCHAR(255) NOT NULL,
-        user_gender gender NULL,
-        discount_id INTEGER NULL,
-        FOREIGN KEY (discount_id) REFERENCES discounts (id)
-        """,
-        should_drop,
-    )
-
-
-# TODO(vvsg): change this function with handle/loading from file
-def fill_products_table(connection):
-    try:
-        cursor = connection.cursor()
-        insert_user_query = sql.SQL(
-            "INSERT INTO products (label, price_copeck) VALUES (%s, %s);"
-        )
-
-        cursor.execute(insert_user_query, ("Apple", 1000))
-        cursor.execute(insert_user_query, ("Orange", 2003))
-        cursor.execute(insert_user_query, ("Chocolate", 100000))
-        cursor.execute(insert_user_query, ("Iphone", 20_000_000))
-        cursor.execute(insert_user_query, ("Chair", 400_000))
-    except Exception as error:
-        print(f"Error occurred in fill_products_table: {error}")
-    finally:
-        if cursor:
-            cursor.close()
-        connection.commit()
-
-
-def recreate_products_table(connection, should_drop=True, fill_table=True):
-    recreate_table(
-        connection,
-        "products",
-        """id SERIAL PRIMARY KEY,
-        label VARCHAR(255) NOT NULL,
-        price_copeck INTEGER CHECK (price_copeck >= 1)
-        """,
-        should_drop,
-    )
-
-    if fill_table:
-        fill_products_table(connection)
-
-
-def recreate_purchase_table(connection, should_drop=True):
-    recreate_table(
-        connection,
-        "purchase",
-        """ id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL,
-            order_date DATE NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        """,
-        should_drop,
-    )
-
-
-def recreate_purchase_info_table(connection, should_drop=True):
-    recreate_table(
-        connection,
-        "purchase_info",
-        """ id SERIAL PRIMARY KEY,
-            purchase_id INTEGER NOT NULL,
-            product_id INTEGER NOT NULL,
-            quantity DOUBLE PRECISION NOT NULL,
-            FOREIGN KEY (product_id) REFERENCES products (id),
-            FOREIGN KEY (purchase_id) REFERENCES purchase (id)
-        """,
-        should_drop,
-    )
-
-
-def recreate_discounts_table(connection, should_drop=True, fill_table=True):
-    recreate_table(
-        connection,
-        "discounts",
-        """ id SERIAL PRIMARY KEY,
-            type discount_type NOT NULL,
-            level INTEGER NOT NULL
-        """,
-        should_drop,
-    )
-
-    if fill_table:
-        fill_discounts_table(connection)
-
-
-# TODO(vvsg): change this function with handle/loading from file
-def fill_discounts_table(connection):
-    try:
-        cursor = connection.cursor()
-        insert_query = sql.SQL("INSERT INTO discounts (type, level) VALUES (%s, %s);")
-
-        cursor.execute(insert_query, ("points", 2))
-        cursor.execute(insert_query, ("points", 0))
-        cursor.execute(insert_query, ("points", 10))
-        cursor.execute(insert_query, ("sale", 11))
-        cursor.execute(insert_query, ("sale", 23))
-    except Exception as error:
-        print(f"Error occurred in fill_discounts_table: {error}")
-    finally:
-        if cursor:
-            cursor.close()
-        connection.commit()
-
+from postgress.utils import (
+    to_db_readable_date,
+)
+from psycopg2 import sql
 
 def find_or_create_user(connection, chat_id):
     try:
@@ -217,11 +10,11 @@ def find_or_create_user(connection, chat_id):
 
         find_user_query = sql.SQL("SELECT * FROM users WHERE chat_id = %s;")
         cursor.execute(find_user_query, (chat_id,))
-
+        
         user = cursor.fetchone()
 
         if user:
-            user_id, chat_id, gender, discount = user
+            user_id, chat_id, gender, birth_date = user
             return user_id, created
 
         insert_user_query = sql.SQL(
@@ -230,7 +23,7 @@ def find_or_create_user(connection, chat_id):
         cursor.execute(insert_user_query, (chat_id,))
 
         created = True
-        user_id, chat_id, gender, discount = cursor.fetchone()
+        user_id, chat_id, gender, birth_date = cursor.fetchone()
         return user_id, created
     except Exception as error:
         print("Error in find_or_create_user: ", error)
@@ -375,6 +168,54 @@ def get_purchases_count(connection, start_date, end_date, user_id=None):
         if cursor:
             cursor.close()
 
+def get_purchases_sum(connection, start_date, end_date, user_id=None):
+    try:
+        cursor = connection.cursor()
+
+        joined_purchase = "(SELECT purchase_id, quantity, product_id from purchase_info join (SELECT id from purchase WHERE 1=1"
+
+        if start_date is not None:
+            joined_purchase += " AND order_date >= %s"
+        if end_date is not None:
+            joined_purchase += " AND order_date <= %s"
+        if user_id is not None:
+            joined_purchase += " AND user_id = %s"
+        joined_purchase += ") as filtered "
+
+        joined_purchase += (
+            "on (filtered.id = purchase_info.product_id)) as joined_purchase"
+        )
+
+        sum_by_purchase = f"""
+            (SELECT purchase_id, sum(price_copeck * quantity) as s from 
+            {joined_purchase}
+            join products on(products.id = product_id)
+            GROUP BY purchase_id) as sum_by_purchase
+        """
+
+        result = f"SELECT COALESCE(sum(s), 0) from {sum_by_purchase}"
+
+        params = []
+        if start_date is not None:
+            params.append(to_db_readable_date(start_date))
+        if end_date is not None:
+            params.append(to_db_readable_date(end_date))
+        if user_id is not None:
+            params.append(user_id)
+
+        cursor.execute(result, tuple(params))
+
+        # fetchone returns row with 1 element
+        purchases_count = cursor.fetchone()[0]
+        return purchases_count
+    except Exception as error:
+        print("Error in get_purchases_sum: ", error)
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+
 
 def get_average_purchase(connection, start_date, end_date):
     try:
@@ -415,55 +256,6 @@ def get_average_purchase(connection, start_date, end_date):
         return average_check
     except Exception as error:
         print("Error in get_average_purchase: ", error)
-        return None
-
-    finally:
-        if cursor:
-            cursor.close()
-
-
-def get_purchases_sum(connection, start_date, end_date, user_id=None):
-    try:
-        cursor = connection.cursor()
-
-        joined_purchase = "(SELECT purchase_id, quantity, product_id from purchase_info join (SELECT id from purchase WHERE 1=1"
-
-        if start_date is not None:
-            joined_purchase += " AND order_date >= %s"
-        if end_date is not None:
-            joined_purchase += " AND order_date <= %s"
-        if user_id is not None:
-            joined_purchase += " AND user_id = %s"
-        joined_purchase += ") as filtered "
-
-        joined_purchase += (
-            "on (filtered.id = purchase_info.purchase_id)) as joined_purchase"
-        )
-
-        sum_by_purchase = f"""
-            (SELECT purchase_id, sum(price_copeck * quantity) as s from 
-            {joined_purchase}
-            join products on(products.id = product_id)
-            GROUP BY purchase_id) as sum_by_purchase
-        """
-
-        result = f"SELECT COALESCE(sum(s), 0) from {sum_by_purchase}"
-
-        params = []
-        if start_date is not None:
-            params.append(to_db_readable_date(start_date))
-        if end_date is not None:
-            params.append(to_db_readable_date(end_date))
-        if user_id is not None:
-            params.append(user_id)
-
-        cursor.execute(result, tuple(params))
-
-        # fetchone returns row with 1 element
-        purchases_count = cursor.fetchone()[0]
-        return purchases_count
-    except Exception as error:
-        print("Error in get_purchases_sum: ", error)
         return None
 
     finally:
@@ -540,17 +332,36 @@ def get_all_products(connection):
             cursor.close()
 
 
-def get_user_discount(connection, user_id):
+def get_loyalty_level(connection, user_id):
     try:
         cursor = connection.cursor()
 
-        base_query = "SELECT discount_type, level FROM users JOIN discounts on (discounts.id = users.discount_id) where users.id = %s"
+        base_query = """
+            SELECT 
+                dt.name AS discount_type_name,
+                d.name AS discount_name,
+                d.value AS discount_value,
+                d.money_threshold AS discount_threshold
+            FROM 
+                users u
+            JOIN 
+                user_to_discount ud ON u.id = ud.user_id
+            JOIN 
+                discount d ON ud.discount_id = d.id
+            JOIN 
+                discount_type dt ON d.type_id = dt.id
+            WHERE 
+                u.id = %s AND 
+                dt.is_enabled = TRUE;
+        """
 
-        cursor.execute(base_query, (user_id))
+        cursor.execute(base_query, [user_id])
 
-        return cursor.fetchall()
+        result = [(type_name, name, value, threshold) for type_name, name, value, threshold in cursor.fetchall()]
+
+        return result
     except Exception as error:
-        print("Error in get_user_discount: ", error)
+        print("Error in get_loyalty_level: ", error)
         return None
 
     finally:
@@ -558,13 +369,13 @@ def get_user_discount(connection, user_id):
             cursor.close()
 
 
-def set_user_discount(connection, user_id, discount_id):
+def update_user_discount(connection, user_id, new_discount_id, old_discount_id):
     try:
         cursor = connection.cursor()
 
-        base_query = "UPDATE users SET discount_id = %s WHERE id = %s"
+        base_query = "UPDATE user_to_discount SET discount_id = %s WHERE user_id = %s AND discount_id = %s"
 
-        cursor.execute(base_query, (discount_id, user_id))
+        cursor.execute(base_query, (new_discount_id, user_id, old_discount_id))
 
         return True
     except Exception as error:
@@ -591,6 +402,49 @@ def set_gender(connection, user_id, user_gender):
         print("Error in set_gender: ", error)
         connection.rollback()
         return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+def set_birthday(connection, user_id, user_birthday):
+    try:
+        cursor = connection.cursor()
+
+        base_query = "UPDATE users SET birth_date = %s WHERE id = %s"
+        print(user_birthday)
+
+        cursor.execute(base_query, (to_db_readable_date(user_birthday, False), user_id))
+
+        return True
+    except Exception as error:
+        print("Error in set_birthday: ", error)
+        connection.rollback()
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+
+def add_admin(connection, login, password, level):
+    try:
+        created = False
+        cursor = connection.cursor()
+        
+        insert_admin_query = sql.SQL(
+            "INSERT INTO admins (login, password, level) VALUES (%s, %s, %s) RETURNING *;"
+        )
+        cursor.execute(insert_admin_query, (login, password, level))
+
+        created = True
+        return user_id, created
+    except Exception as error:
+        print("Error in find_or_create_user: ", error)
+        connection.rollback()
+        return None, False
 
     finally:
         if cursor:
