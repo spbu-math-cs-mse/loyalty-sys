@@ -1,20 +1,18 @@
 <script setup>
+import { ref } from "vue";
+import { useUserStore } from "@/stores/user";
+
 import Menu from "primevue/menu";
 import Button from "primevue/button";
 import Drawer from "primevue/drawer";
 import Toast from "primevue/toast";
 import ToggleButton from "primevue/togglebutton";
-
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { useUserStore } from '@/stores/user'
 import router from "./router";
 
 const user = useUserStore();
 
 let mobileMenuFixed = ref(false);
 let desktopMenuFixed = ref(false);
-
-const menuExpandWidth = 992;
 
 const closeMenu = () => {
   mobileMenuFixed.value = false;
@@ -23,75 +21,48 @@ const closeMenu = () => {
 const menuItems = ref([
   {
     label: "Статистика",
-    icon: "pi pi-chart-bar",
+    icon: "pi pi-chart-line",
     route: "/stats",
     command: () => closeMenu(),
   },
   {
     label: "Привилегии",
-    icon: "pi pi-user-plus",
+    icon: "pi pi-crown",
     route: "/privilege",
+    command: () => closeMenu(),
+  },
+  {
+    label: "События",
+    icon: "pi pi-calendar-plus",
+    route: "/events",
+    command: () => closeMenu(),
+  },
+  {
+    label: "Админы",
+    icon: "pi pi-shield",
+    route: "/admins",
     command: () => closeMenu(),
   },
   {
     label: "Выйти",
     icon: "pi pi-sign-out",
     route: "/login",
-    command: () => { 
-      closeMenu()
-      localStorage.removeItem("auth")
+    command: () => {
+      closeMenu();
+      localStorage.removeItem("auth");
       user.auth = false;
-      router.push("/login")
+      router.push("/login");
     },
   },
-  // Allowed comments, will be needed later
-  // {
-  //   label: "Настройки",
-  //   icon: "pi pi-cog",
-  //   route: "/settings",
-  //   command: () => closeMenu(),
-  // },
-  // {
-  //   label: "Купоны",
-  //   icon: "pi pi-tag",
-  //   route: "/coupons",
-  //   command: () => closeMenu(),
-  // },
-  // {
-  //   label: "Скидки",
-  //   icon: "pi pi-percentage",
-  //   route: "/sales",
-  //   command: () => closeMenu(),
-  // },
 ]);
-
-const useBreakpoints = () => {
-  let windowWidth = ref(window.innerWidth);
-  let windowHeight = ref(window.innerHeight);
-
-  const onWidthChange = () => {
-    windowWidth.value = window.innerWidth;
-    windowHeight.value = window.innerHeight;
-  };
-
-  onMounted(() => window.addEventListener("resize", onWidthChange));
-  onUnmounted(() => window.removeEventListener("resize", onWidthChange));
-
-  const width = computed(() => windowWidth.value);
-  const height = computed(() => windowHeight.value);
-
-  return { width, height };
-};
-
-const { width, height } = useBreakpoints();
 </script>
 
 <template>
   <Toast />
 
-  <div v-show="(width < menuExpandWidth) && user.auth" class="container">
+  <div v-show="user.auth" class="container lg:hidden">
     <header
-      class="header p-3 px-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block"
+      class="header p-3 px-2 lg:px-3 mx-auto my-0 border-round-xs flex justify-content-between lg:block fadeinup animation-ease-out animation-duration-400"
     >
       <div class="">
         <img
@@ -146,8 +117,7 @@ const { width, height } = useBreakpoints();
   </div>
 
   <div class="container flex">
-      
-    <div v-show="(width >= menuExpandWidth) && user.auth">
+    <div v-show="user.auth" :class="{ 'lg:flex': user.auth, hidden: true }">
       <Menu
         :model="menuItems"
         class="aside overflow-scroll sticky p-2 top-0 fadeinleft animation-ease-out animation-duration-400 shadow-1 border-none"
@@ -178,7 +148,7 @@ const { width, height } = useBreakpoints();
             alt="Система лояльности"
           />
         </template>
-  
+
         <template #item="{ item, props }">
           <router-link
             v-if="item.route"
@@ -198,7 +168,12 @@ const { width, height } = useBreakpoints();
               <span v-if="desktopMenuFixed" class="ml-2">{{ item.label }}</span>
             </a>
           </router-link>
-          <a v-else :href="item.url" :target="item.target" v-bind="props.action">
+          <a
+            v-else
+            :href="item.url"
+            :target="item.target"
+            v-bind="props.action"
+          >
             <span class="text-lg" :class="item.icon" />
             <span class="ml-2">{{ item.label }}</span>
           </a>
