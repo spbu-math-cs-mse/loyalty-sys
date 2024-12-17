@@ -16,6 +16,8 @@ const axios = require("axios");
 const primevue = usePrimeVue();
 const languageConfig = primevue.config.locale;
 
+const categoryList = ref([]);
+
 const productList = ref([]);
 const selectedProductList = ref([]);
 const filteredProductList = ref([]);
@@ -76,8 +78,10 @@ const fetchDate = ref({
 });
 
 const formatDateToYYYYMM = (date) => {
-    return date.toLocaleString('en-CA', { year: 'numeric', month: '2-digit' }).replace('/', '-');
-}
+  return date
+    .toLocaleString("en-CA", { year: "numeric", month: "2-digit" })
+    .replace("/", "-");
+};
 
 const getMonthsInRange = (fromDate, toDate) => {
   if (!fromDate || !toDate) {
@@ -104,7 +108,7 @@ onMounted(() => {
   chartMoreBuysOptions.value = setChartDoughnutOptions("Кто чаще покупает");
   chartBirthdayOptions.value = setChartDoughnutOptions("Дни рождения");
   chartCategoryOptions.value = setChartDoughnutOptions("Покупки в категориях");
-  
+
   chartLineOptions.value = setChartLineOptions();
   chartLineConfig.value = setChartDoughnutConfig();
   chartDoughnutConfig.value = setChartDoughnutConfig();
@@ -123,8 +127,11 @@ onMounted(() => {
       axios.get("http://84.201.143.213:5000/data/visitor_count", {
         params: fetchDate,
       }),
-      axios.get("http://84.201.143.213:5000/data/products"),
       axios.get("http://84.201.143.213:5000/data/buys_more"),
+      axios.get("http://84.201.143.213:5000/data/buys_bithdays"),
+      axios.get("http://84.201.143.213:5000/data/buys_category"),
+      axios.get("http://84.201.143.213:5000/data/products"),
+      axios.get("http://84.201.143.213:5000/data/categories"),
     ])
     .then(
       axios.spread(
@@ -133,16 +140,23 @@ onMounted(() => {
           averageCheckResponse,
           medianСheckResponse,
           visitorCountResponse,
+          chartMoreBuysDataResponse,
+          chartBirthdayDataResponse,
+          chartCategoryDataResponse,
           productListResponse,
-          chartDataResponse
+          categoryListResponse
         ) => {
           totalPurchases.value = totalPurchasesResponse.data.total_purchases;
           averageCheck.value = averageCheckResponse.data.average_check;
           medianСheck.value = medianСheckResponse.data.median_check;
           visitorCount.value = visitorCountResponse.data.visitor_count;
-          chartMoreBuysDataset.value = chartDataResponse.data;
+
+          chartMoreBuysDataset.value = chartMoreBuysDataResponse.data;
+          chartBirthdayDataset.value = chartBirthdayDataResponse.data;
+          chartCategoryDataset.value = chartCategoryDataResponse.data;
 
           productList.value = productListResponse.data;
+          categoryList.value = categoryListResponse.data;
         }
       )
     )
@@ -199,7 +213,6 @@ const getColorsForCharts = (count = 0, power = 500) => {
   ];
 
   return defaultColors.slice(0, count).map((x) => $dt(x).value);
-
 };
 
 const setChartDoughnutConfig = () => {
@@ -267,7 +280,7 @@ const setCategoryDoughnutData = () => {
   const hoverColors = getColorsForCharts(3, 400);
 
   chartCategoryData.value = {
-    labels: ['Food', 'Devices', 'Furniture'],
+    labels: categoryList.value,
     datasets: [
       {
         data: chartCategoryDataset,
@@ -292,25 +305,6 @@ const setChartLineData = () => {
 
   const color = getColorsForCharts(selectedProductList.value.length);
 
-  // TODO: Remove after demo
-  const data = [
-    {
-      dataset: [0,0,0,0,0,0,0,3,0,0,7,2,10,8],
-    },
-    {
-      dataset: [0,0,0,0,0,0,0,0,0,0,4,0,12,15],
-    },
-    {
-      dataset: [0,0,0,0,0,0,0,3,0,0,20,17,13,10],
-    },
-    {
-      dataset: [0,0,0,0,0,0,0,0,1,0,2,0,3,1],
-    },
-    {
-      dataset: [0,0,0,0,0,0,0,0,0,4,8,5,4,2],
-    },
-  ];
-
   for (let i = 0; i < selectedProductList.value.length; i++) {
     axios
       .get("http://84.201.143.213:5000/data/values", {
@@ -332,14 +326,6 @@ const setChartLineData = () => {
       })
       .catch((error) => {
         console.log(error);
-        chartLineData.value.datasets.push({
-          label: selectedProductList.value[i].label,
-          data: data[i].dataset,
-          backgroundColor: color[i],
-          borderColor: color[i],
-          borderWidth: 2,
-          fill: false,
-        });
       });
   }
 };
@@ -354,7 +340,6 @@ const setChartLineOptions = () => {
   );
 
   const a = setChartDoughnutOptions();
-  // a.plugins.title.display = false;
   a.layout.padding.left = 0;
   a.scales = {
     x: {
@@ -438,25 +423,6 @@ const setChartDoughnutOptions = (str = "") => {
 };
 
 const toast = useToast();
-
-// TODO: Remove after demo
-totalPurchases.value = 132797220;
-averageCheck.value = 2567500;
-medianСheck.value = 1875000;
-visitorCount.value = 14;
-chartMoreBuysDataset.value = [14, 27, 43];
-chartBirthdayDataset.value = [1, 1, 1, 0, 2, 0, 1, 1, 3, 1, 2, 1];
-chartCategoryDataset.value = [56, 18, 10];
-
-axios.get("http://84.201.143.213:5000/data/products")
-  .then((response) => {
-    productList.value = response.data;
-    console.log(response);
-  })
-  .catch((error) => {
-    console.log(error);
-  });
-
 </script>
 
 <template>
@@ -505,19 +471,19 @@ axios.get("http://84.201.143.213:5000/data/products")
       <div class="flex flex-wrap gap-4 w-full">
         <ChartNumberDisplay
           title="Cумма покупок"
-          :number="(totalPurchases/100).toFixed(2)"
+          :number="(totalPurchases / 100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
         <ChartNumberDisplay
           title="Средний чек"
-          :number="(averageCheck/100).toFixed(2)"
+          :number="(averageCheck / 100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
         <ChartNumberDisplay
           title="Медианный чек"
-          :number="(medianСheck/100).toFixed(2)"
+          :number="(medianСheck / 100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
