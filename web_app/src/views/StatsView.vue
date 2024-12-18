@@ -15,6 +15,7 @@ import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 const axios = require("axios");
 const primevue = usePrimeVue();
 const languageConfig = primevue.config.locale;
+const toastConfig = languageConfig.toast;
 
 const categoryList = ref([]);
 
@@ -35,18 +36,18 @@ const searchProduct = (event) => {
 const onProductFormSubmit = (e) => {
   if (productDates.value[0] == null) {
     toast.add({
-      severity: "error",
-      summary: "Ошибка",
-      detail: "Выберите дату",
+      severity: toastConfig.severity.error,
+      summary: languageConfig.errorTitle,
+      detail: toastConfig.detail.product.nullData,
       life: 4000,
     });
     return;
   }
   if (selectedProductList.value.length === 0) {
     toast.add({
-      severity: "error",
-      summary: "Ошибка",
-      detail: "Выберите товар",
+      severity: toastConfig.severity.error,
+      summary: languageConfig.errorTitle,
+      detail: toastConfig.detail.product.nullProduct,
       life: 4000,
     });
     return;

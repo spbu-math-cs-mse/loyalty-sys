@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { createPinia } from 'pinia'
+import { createPinia } from "pinia";
 import { definePreset } from "@primevue/themes";
 import App from "./App.vue";
 import router from "./router";
@@ -62,7 +62,7 @@ const Noir = definePreset(Aura, {
   },
 });
 
-const pinia = createPinia()
+const pinia = createPinia();
 const app = createApp(App);
 app
   .use(PrimeVue, {
@@ -257,6 +257,15 @@ app
             delete: "Уровень удален",
             max: "Максимальное количество уровней",
           },
+          product: {
+            nullData: "Выберите дату",
+            nullProduct: "Выберите товар",
+          },
+          admin: {
+            add: "Администратор добавлен",
+            edit: "Администратор изменен",
+            delete: "Администратор удален",
+          },
         },
         forms: {
           login: "Войти",
@@ -267,7 +276,7 @@ app
           nullPassword: "Пароль не может быть пустым",
           incorrectLogin: "Неверный логин",
           incorrectPassword: "Неверный пароль",
-        }
+        },
       },
     },
   })

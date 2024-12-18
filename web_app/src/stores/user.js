@@ -6,7 +6,7 @@ export const useUserStore = defineStore("user", {
     auth: !!JSON.parse(localStorage.getItem("auth")),
   }),
   actions: {
-    getHash(string) {
+    async getHash(string) {
       return CryptoJS.SHA512(string).toString(CryptoJS.enc.Hex);
     },
   },
