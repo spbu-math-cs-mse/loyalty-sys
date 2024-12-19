@@ -112,7 +112,7 @@ const formSubmit = () => {
             autofocus
             fluid
           />
-          <small v-if="errors && !product.login" class="text-red-500"
+          <small v-show="errors && !product.login" class="text-red-500"
             >Это обязательное поле.</small
           >
         </div>
@@ -128,7 +128,7 @@ const formSubmit = () => {
             toggleMask
             fluid
           />
-          <small v-if="errors && !product.password" class="text-red-500"
+          <small v-show="errors && !product.password" class="text-red-500"
             >Это обязательное поле.</small
           >
         </div>

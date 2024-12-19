@@ -17,7 +17,7 @@ import Toolbar from "primevue/toolbar";
 import Badge from "primevue/badge";
 import Dialog from "primevue/dialog";
 
-const emit = defineEmits(['syncroneSettings'])
+const emit = defineEmits(["syncroneSettings"]);
 const props = defineProps({
   settingsProps: {
     type: Object,
@@ -46,7 +46,7 @@ const isModified = computed(() => {
 
 const saveSettings = () => {
   Object.assign(settings.value, editableSettings);
-  emit('syncroneSettings')
+  emit("syncroneSettings");
 };
 
 const cancelSettingsChanges = () => {
@@ -112,7 +112,7 @@ const saveProduct = () => {
       });
     }
 
-    emit('syncroneSettings')
+    emit("syncroneSettings");
     productDialog.value = false;
     product.value = {
       sale: {},
@@ -271,7 +271,7 @@ watch(
             :invalid="submitted && !product.label"
             fluid
           />
-          <small v-if="submitted && !product.label" class="text-red-500"
+          <small v-show="submitted && !product.label" class="text-red-500"
             >Это обязательное поле.</small
           >
         </div>

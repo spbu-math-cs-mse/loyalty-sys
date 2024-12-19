@@ -2,6 +2,7 @@
 import { ref, onMounted } from "vue";
 import { useToast } from "primevue/usetoast";
 import { usePrimeVue } from "primevue/config";
+import { useDateFormater } from "@/stores/dateFormater";
 import { Form } from "@primevue/forms";
 import { $dt } from "@primevue/themes";
 
@@ -37,7 +38,7 @@ const onProductFormSubmit = (e) => {
   if (productDates.value[0] == null) {
     toast.add({
       severity: toastConfig.severity.error,
-      summary: languageConfig.errorTitle,
+      summary: toastConfig.summary.error,
       detail: toastConfig.detail.product.nullData,
       life: 4000,
     });
@@ -46,7 +47,7 @@ const onProductFormSubmit = (e) => {
   if (selectedProductList.value.length === 0) {
     toast.add({
       severity: toastConfig.severity.error,
-      summary: languageConfig.errorTitle,
+      summary: toastConfig.summary.error,
       detail: toastConfig.detail.product.nullProduct,
       life: 4000,
     });
@@ -78,11 +79,7 @@ const fetchDate = ref({
   end: today.toISOString().substring(0, 7),
 });
 
-const formatDateToYYYYMM = (date) => {
-  return date
-    .toLocaleString("en-CA", { year: "numeric", month: "2-digit" })
-    .replace("/", "-");
-};
+const dateFormater = useDateFormater();
 
 const getMonthsInRange = (fromDate, toDate) => {
   if (!fromDate || !toDate) {
@@ -281,7 +278,7 @@ const setCategoryDoughnutData = () => {
   const hoverColors = getColorsForCharts(3, 400);
 
   chartCategoryData.value = {
-    labels: categoryList.value,
+    labels: categoryList.value.map((x) => x.label),
     datasets: [
       {
         data: chartCategoryDataset,
@@ -311,8 +308,8 @@ const setChartLineData = () => {
       .get("http://84.201.143.213:5000/data/values", {
         params: {
           product_id: selectedProductList.value[i].id,
-          start_date: formatDateToYYYYMM(productDates.value[0]),
-          end_date: formatDateToYYYYMM(productDates.value[1]),
+          start_date: dateFormater.toYYYYMM(productDates.value[0]),
+          end_date: dateFormater.toYYYYMM(productDates.value[1]),
         },
       })
       .then((response) => {
@@ -522,7 +519,7 @@ const toast = useToast();
             <DatePicker
               v-model="productDates"
               view="month"
-              dateFormat="mm/yy"
+              dateFormat="mm.yy"
               selectionMode="range"
               iconDisplay="input"
               inputId="products_range"
