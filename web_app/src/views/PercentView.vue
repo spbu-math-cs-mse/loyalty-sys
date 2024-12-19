@@ -17,7 +17,7 @@ import Toolbar from "primevue/toolbar";
 import Badge from "primevue/badge";
 import Dialog from "primevue/dialog";
 
-const emit = defineEmits(['syncroneSettings'])
+const emit = defineEmits(["syncroneSettings"]);
 const props = defineProps({
   settingsProps: {
     type: Object,
@@ -46,7 +46,7 @@ const isModified = computed(() => {
 
 const saveSettings = () => {
   Object.assign(settings.value, editableSettings);
-  emit('syncroneSettings')
+  emit("syncroneSettings");
 };
 
 const cancelSettingsChanges = () => {
@@ -112,7 +112,7 @@ const saveProduct = () => {
       });
     }
 
-    emit('syncroneSettings')
+    emit("syncroneSettings");
     productDialog.value = false;
     product.value = {
       sale: {},
@@ -125,29 +125,6 @@ const editPrivilege = (privilege) => {
   // TODO: Maybe should use deepClone instead of JSON
   product.value = JSON.parse(JSON.stringify(privilege));
   productDialog.value = true;
-};
-
-const deepClone = (inObject) => {
-  let outObject, value, key;
-
-  if (typeof inObject !== "object" || inObject === null) return inObject;
-
-  if (inObject instanceof Map) {
-    outObject = new Map(inObject);
-    for ([key, value] of outObject) outObject.set(key, deepClone(value));
-  } else if (inObject instanceof Set) {
-    outObject = new Set();
-    for (value of inObject) outObject.add(deepClone(value));
-  } else if (inObject instanceof Date) {
-    outObject = new Date(+inObject);
-  } else {
-    outObject = Array.isArray(inObject) ? [] : {};
-    for (key in inObject) {
-      value = inObject[key];
-      outObject[key] = deepClone(value);
-    }
-  }
-  return outObject;
 };
 
 watch(
@@ -294,7 +271,7 @@ watch(
             :invalid="submitted && !product.label"
             fluid
           />
-          <small v-if="submitted && !product.label" class="text-red-500"
+          <small v-show="submitted && !product.label" class="text-red-500"
             >Это обязательное поле.</small
           >
         </div>
