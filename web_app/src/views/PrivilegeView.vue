@@ -94,33 +94,34 @@ const deletePrivilege = () => {
     settingsEmitObj.value
   ].privileges.filter((items) => items.label !== product.value.label);
   deleteProductDialog.value = false;
-  tupayaRuchkaSend()
+  tupayaRuchkaSend();
 };
 
 onMounted(() => {
-  axios.get("http://84.201.143.213:5000/privileges")
-  .then((response) => {
-    settings.value = response.data;
-    console.log(response)
-  })
-  .catch((error) =>{
-    console.log(error)
-  })
-})
+  axios
+    .get("http://84.201.143.213:5000/privileges")
+    .then((response) => {
+      settings.value = response.data;
+      console.log(response);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+});
 
 const tupayaRuchkaSend = () => {
-  axios.post("http://84.201.143.213:5000/privileges", {
-    settings: settings,
-  })
-  .then((response) => {
-    console.log("SEND NEW PRIVILEGES SETTINGS");
-    console.log(response);
-  })
-  .catch((error) =>{
-    console.log(error)
-  })
-}
-
+  axios
+    .post("http://84.201.143.213:5000/privileges", {
+      settings: settings,
+    })
+    .then((response) => {
+      console.log("SEND NEW PRIVILEGES SETTINGS");
+      console.log(response);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 </script>
 
 <template>
