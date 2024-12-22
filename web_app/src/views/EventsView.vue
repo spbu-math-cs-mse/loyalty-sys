@@ -50,7 +50,7 @@ const formSubmit = () => {
         toast.add({
           severity: toastConfig.severity.success,
           summary: toastConfig.summary.successTitle,
-          detail: toastConfig.severity.event.add,
+          detail: toastConfig.detail.event.add,
           life: 3000,
         });
       })
@@ -75,7 +75,7 @@ const formSubmit = () => {
 
 onMounted(() => {
   axios
-    .get("http://84.201.143.213:5000/categories")
+    .get("http://84.201.143.213:5000/data/categories")
     .then((response) => {
       categotyList.value = response.data;
     })
@@ -83,15 +83,6 @@ onMounted(() => {
       console.log(error);
     });
 });
-// Remove this
-categotyList.value = [
-  { label: "Категория 1", id: 1 },
-  { label: "Категория 2", id: 2 },
-  { label: "Категория 3", id: 3 },
-  { label: "Категория 4", id: 4 },
-  { label: "Категория 5", id: 5 },
-  { label: "Категория 6", id: 6 },
-];
 </script>
 
 <template>

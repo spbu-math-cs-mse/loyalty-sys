@@ -34,8 +34,8 @@ const onFormSubmit = () => {
   if (formData.value.username.trim() === "") {
     toast.add({
       severity: toastConfig.severity.error,
-      summary: languageConfig.errorTitle,
-      detail: toastConfig.nullLogin,
+      summary: toastConfig.summary.error,
+      detail: toastConfig.forms.nullLogin,
       life: 3000,
     });
     return;
@@ -44,8 +44,8 @@ const onFormSubmit = () => {
   if (formData.value.password.trim() === "") {
     toast.add({
       severity: toastConfig.severity.error,
-      summary: languageConfig.errorTitle,
-      detail: toastConfig.nullPassword,
+      summary: toastConfig.summary.error,
+      detail: toastConfig.forms.nullPassword,
       life: 3000,
     });
     return;
@@ -53,7 +53,7 @@ const onFormSubmit = () => {
 
   waitingData.value = true;
   const sendingData = {
-    username: formData.value.username,
+    login: formData.value.username,
     password: formData.value.password,
   };
 
@@ -61,17 +61,17 @@ const onFormSubmit = () => {
   axios
     .post("http://84.201.143.213:5000/login", sendingData)
     .then((response) => {
-      if (response.auth) {
-        localStorage.setItem("auth", JSON.stringify(response.auth));
-        user.auth = response.auth;
-      } else if (response.error !== "") {
-        switch (response.error) {
+      if (response.data.auth) {
+        localStorage.setItem("auth", JSON.stringify(response.data.auth));
+        user.auth = response.data.auth;
+      } else if (response.data.error !== undefined) {
+        switch (response.data.error) {
           case errorTypes.invalidPassword:
             formData.value.password = "";
             toast.add({
               severity: toastConfig.severity.error,
-              summary: languageConfig.errorTitle,
-              detail: response.error.type,
+              summary: toastConfig.summary.error,
+              detail: toastConfig.forms.invalidPassword,
               life: 3000,
             });
             break;
@@ -81,8 +81,8 @@ const onFormSubmit = () => {
             formData.value.password = "";
             toast.add({
               severity: toastConfig.severity.error,
-              summary: languageConfig.errorTitle,
-              detail: response.error.type,
+              summary: toastConfig.summary.error,
+              detail: toastConfig.forms.incorrectLogin,
               life: 3000,
             });
             break;
@@ -90,8 +90,8 @@ const onFormSubmit = () => {
           default:
             toast.add({
               severity: toastConfig.severity.error,
-              summary: languageConfig.errorTitle,
-              detail: response.error.type,
+              summary: toastConfig.summary.error,
+              detail: response.data.error,
               life: 3000,
             });
         }
@@ -101,19 +101,9 @@ const onFormSubmit = () => {
       console.log(error);
     })
     .finally(() => {
-      /* Remove to then method after
-          adding data of admins to database */
       waitingData.value = false;
-      localStorage.setItem("auth", true);
-      user.auth = true;
       router.push("/");
     });
-
-  toast.add({
-    severity: toastConfig.severity.success,
-    summary: "Форма отправлена",
-    life: 3000,
-  });
 };
 </script>
 

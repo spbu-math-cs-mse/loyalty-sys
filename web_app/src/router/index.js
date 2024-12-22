@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
+import PrivilegeView from "../views/PrivilegeView.vue";
 
 const routes = [
   {
@@ -20,7 +21,7 @@ const routes = [
   {
     path: "/privilege",
     name: "privilege",
-    component: () => import("../views/PrivilegeView.vue"),
+    component: () => PrivilegeView,
     meta: {
       title: "Привилегии",
     },

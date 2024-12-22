@@ -35,10 +35,10 @@ const productDialog = ref(false);
 const submitted = ref(false);
 const productDialogText = ref();
 
-const privilegeLevels = ref(props.settingsProps.privileges);
-const settings = ref(props.settingsProps.settings);
+const privilegeLevels = ref(props.settingsProps.percent.privileges);
+const settings = ref(props.settingsProps.percent.settings);
 
-const editableSettings = reactive({ ...props.settingsProps.settings });
+const editableSettings = reactive({ ...props.settingsProps.percent.settings });
 
 const isModified = computed(() => {
   return deepEqual(settings.value, editableSettings);
@@ -128,8 +128,9 @@ const editPrivilege = (privilege) => {
 };
 
 watch(
-  () => props.settingsProps,
+  () => props.settingsProps.percent,
   (newSettingsProps, oldSettingsProps) => {
+    console.log("privilegeLevels", newSettingsProps);
     privilegeLevels.value = newSettingsProps.privileges;
     settings.value = newSettingsProps.settings;
   },
@@ -213,26 +214,6 @@ watch(
             inputId="percent_checked"
             class="switch"
             v-model="editableSettings.active"
-          />
-        </div>
-
-        <div
-          class="flex flex-wrap align-items-center justify-content-between mb-2"
-        >
-          <label
-            for="percent_levels"
-            class="settings__title font-normal md:text-lg"
-            >Уровни привилегий</label
-          >
-          <InputNumber
-            v-model="editableSettings.levels"
-            inputId="percent_levels"
-            mode="decimal"
-            showButtons
-            :min="1"
-            :max="20"
-            :step="1"
-            :invalid="editableSettings.levels === null"
           />
         </div>
 
