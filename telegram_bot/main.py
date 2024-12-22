@@ -257,9 +257,7 @@ def generate_qr_code(user_id):
 
 
 @app.post("/loyalty_updates/")
-async def loyalty_update(
-    request: Request,
-):  # http://84.201.143.213:5050/loyalty_updates/
+async def loyalty_update(request: Request):
     try:
         data = await request.json()
         chat_id = data["chat_id"]
@@ -274,9 +272,36 @@ async def loyalty_update(
         )
 
 
+@app.post("/new_event/")
+async def loyalty_update(request: Request):
+    try:
+        data = await request.json()
+        chat_id = data["chat_id"]
+        name = data["name"]
+        description = data["description"]
+        start_date = data["start_date"]
+        end_date = data["end_date"]
+        send_new_event_message(chat_id, name, description, start_date, end_date)
+        return {"status": "success"}
+    except KeyError as e:
+        raise HTTPException(status_code=400, detail=f"Missing field: {e}")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, detail=f"{BotMessages.BACKEND_ERROR.value} {e}"
+        )
+
+
 def send_loyalty_update_message(chat_id, loyalty_level):
     try:
         message = f"{BotMessages.LOYALTY_LEVEL_INCREASING.value} {loyalty_level}!"
+        bot.send_message(chat_id, message)
+    except Exception as e:
+        print(f"{BotMessages.BACKEND_ERROR.value} {e}")
+
+
+def send_new_event_message(chat_id, name, description, start_date, end_date):
+    try:
+        message = f"{BotMessages.NEW_EVENT.value} {name} ({start_date-end_date})!\n\n{description}"
         bot.send_message(chat_id, message)
     except Exception as e:
         print(f"{BotMessages.BACKEND_ERROR.value} {e}")
