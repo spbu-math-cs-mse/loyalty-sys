@@ -1,11 +1,10 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import PrivilegeView from "../views/PrivilegeView.vue";
 
 const routes = [
   {
     path: "/",
     name: "home",
-    // component: HomeView,
     redirect: { name: "stats" },
     meta: {
       title: "Главная",
@@ -20,6 +19,30 @@ const routes = [
     },
   },
   {
+    path: "/privilege",
+    name: "privilege",
+    component: () => PrivilegeView,
+    meta: {
+      title: "Привилегии",
+    },
+  },
+  {
+    path: "/events",
+    name: "events",
+    component: () => import("../views/EventsView.vue"),
+    meta: {
+      title: "События",
+    },
+  },
+  {
+    path: "/admins",
+    name: "admins",
+    component: () => import("../views/AdminsView.vue"),
+    meta: {
+      title: "Админы",
+    },
+  },
+  {
     path: "/coupons",
     name: "coupons",
     component: () => import("../views/CouponsView.vue"),
@@ -28,19 +51,11 @@ const routes = [
     },
   },
   {
-    path: "/privilege",
-    name: "privilege",
-    component: () => import("../views/PrivilegeView.vue"),
+    path: "/login",
+    name: "login",
+    component: () => import("../views/LoginView.vue"),
     meta: {
-      title: "Привилегии",
-    },
-  },
-  {
-    path: "/settings",
-    name: "settings",
-    component: () => import("../views/SettingsView.vue"),
-    meta: {
-      title: "Настройки",
+      title: "Вход",
     },
   },
   {
@@ -49,15 +64,6 @@ const routes = [
     component: () => import("../views/PageNotFound.vue"),
     meta: {
       title: "404 Страница не найдена",
-    },
-  },
-  {
-    path: "/sales",
-    name: "sales",
-    redirect: { name: "notfound" },
-    // component: () => import("../views/SalesView.vue"),
-    meta: {
-      title: "Скидки",
     },
   },
   {
@@ -72,8 +78,16 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || "Система лояльности";
-  next();
+  const auth = JSON.parse(localStorage.getItem("auth")) || false;
+
+  if (to.name !== "login" && !auth) {
+    next({ name: "login" });
+  } else if (to.name === "login" && auth) {
+    next({ name: "home" });
+  } else {
+    next();
+    document.title = to.meta.title || "Система лояльности";
+  }
 });
 
 export default router;
