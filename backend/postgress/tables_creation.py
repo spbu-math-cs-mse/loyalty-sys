@@ -96,6 +96,23 @@ def recreate_users_table(connection, should_drop=True):
 
 # ================= ADMIN ===================
 
+
+def fill_admin(connection):
+    try:
+        cursor = connection.cursor()
+        insert_admin_query = sql.SQL(
+            "INSERT INTO admins (login, password, level) VALUES (%s, %s, %s) RETURNING *;"
+        )
+
+        cursor.execute(insert_admin_query, ("admin", "c7ad44cbad762a5da0a452f9e854fdc1e0e7a52a38015f23f3eab1d80b931dd472634dfac71cd34ebc35d16ab7fb8a90c81f975113d6c7538dc69dd8de9077ec", 0))
+    except Exception as error:
+        print(f"Error occurred in fill_admin: {error}")
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+        
+
 def recreate_admins_table(connection, should_drop=True):
     recreate_table(
         connection,
@@ -103,13 +120,13 @@ def recreate_admins_table(connection, should_drop=True):
         """id SERIAL PRIMARY KEY,
         login VARCHAR(255) NOT NULL,
         password VARCHAR(255) NOT NULL,
-        level SMALLINT NOT NULL,
+        level SMALLINT NOT NULL
         """,
         should_drop,
     )
 
     if (should_drop):
-        add_admin("admin", "hash(admin)", 0)
+        fill_admin(connection)
 
 
 # ================= PRODUCT ===================
@@ -228,17 +245,23 @@ def recreate_points_table(connection, should_drop=True):
         should_drop,
     )
 
-def delete_enum(connection, enum_name):
-    try:
-        cursor = connection.cursor()
-        drop_type_query = sql.SQL(f"DROP TABLE IF EXISTS {enum_name} CASCADE")
-        cursor.execute(drop_type_query)
-        connection.commit()
-    except Exception as error:
-        print(f"Error occurred in recreate_type_gender {enum_name}: {error}")
-    finally:
-        if cursor:
-            cursor.close()
+# ================= EVENT ===================
+
+def recreate_events_table(connection, should_drop=True):
+    recreate_table(
+        connection,
+        "events",
+        """id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            description TEXT,
+            start_date DATE NULL,
+            end_date DATE NOT NULL,
+            category_id INTEGER NULL,
+            sale SMALLINT NULL,
+            FOREIGN KEY (category_id) REFERENCES categories (id)
+        """,
+        should_drop,
+    )
 
 if __name__ == "__main__":
     pool = get_connections_pool()
@@ -259,5 +282,8 @@ if __name__ == "__main__":
     recreate_users_table(connection)
 
     recreate_points_table(connection)
+
+    recreate_admins_table(connection)
+    recreate_events_table(connection)
 
     pool.putconn(connection)

@@ -122,7 +122,7 @@ def get_product_statistic(connection, product_id, start_date, end_date):
 
         cursor.execute(find_product_query, (product_id,))
 
-        id, label, price = cursor.fetchone()
+        id, label, price, category_id = cursor.fetchone()
 
         return qualities, label
     except Exception as error:
@@ -281,6 +281,474 @@ def get_visitors_count(connection):
     finally:
         if cursor:
             cursor.close()
+
+def get_purchase_counts_by_gender(connection):
+    try:
+        cursor = connection.cursor()
+        purchase_counts = [0, 0, 0]
+
+        query = """
+        SELECT u.user_gender, COUNT(p.id) AS purchase_count
+        FROM users u
+        JOIN purchase p ON u.id = p.user_id
+        GROUP BY u.user_gender
+        """
+
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        for gender, count in results:
+            if gender == 'man':
+                purchase_counts[0] = count
+            elif gender == 'women':
+                purchase_counts[1] = count
+            else:
+                purchase_counts[2] = count
+        return purchase_counts
+
+    except Exception as error:
+        print(f"Error retrieving purchase counts: {error}")
+        return {}
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def get_median_purchase(connection, start_date, end_date):
+    try:
+        cursor = connection.cursor()
+
+        joined_purchase = "(SELECT purchase_id, quantity, product_id from purchase_info join (SELECT id from purchase WHERE 1=1"
+
+        if start_date is not None:
+            joined_purchase += " AND order_date >= %s"
+        if end_date is not None:
+            joined_purchase += " AND order_date <= %s"
+        joined_purchase += ") as filtered "
+
+        joined_purchase += (
+            "on (filtered.id = purchase_info.purchase_id)) as joined_purchase"
+        )
+
+        sum_by_purchase = f"""
+            (SELECT purchase_id, sum(price_copeck * quantity) as s from 
+            {joined_purchase}
+            join products on(products.id = product_id)
+            GROUP BY purchase_id) as sum_by_purchase
+        """
+
+        result = f"SELECT s FROM {sum_by_purchase} ORDER BY s"
+
+        params = []
+        if start_date is not None:
+            params.append(start_date)
+        if end_date is not None:
+            params.append(end_date)
+
+        cursor.execute(result, tuple(params))
+
+        sums = cursor.fetchall()
+        sums = [row[0] for row in sums]
+
+        n = len(sums)
+        if n == 0:
+            return 0
+
+        mid_index = n // 2
+        sums.sort()
+
+        if n % 2 == 0:
+            median = sums[mid_index - 1]
+        else:
+            median = sums[mid_index]
+
+        return median
+    except Exception as error:
+        print("Error in get_median_purchase: ", error)
+        return None
+    finally:
+        if cursor:
+            cursor.close()
+
+def get_user_birthdays_by_month(connection):
+    res = [0] * 12
+
+    try:
+        cursor = connection.cursor()
+        
+        query = """
+        SELECT EXTRACT(MONTH FROM birth_date) AS month, COUNT(*) AS count
+        FROM users
+        GROUP BY month
+        ORDER BY month;
+        """
+        
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        for month, count in results:
+            if (month == None):
+                continue
+            res[int(month) - 1] = count
+
+        return res
+
+    except Exception as error:
+        print(f"Error in get_user_birthdays_by_month: {error}")
+        return [0] * 12
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def get_products_count_by_category(connection):
+    category_count = []
+
+    try:
+        cursor = connection.cursor()
+
+        query = """
+        SELECT c.id, c.label, COALESCE(SUM(pi.quantity), 0) AS total_quantity
+        FROM categories c
+        LEFT JOIN products p ON c.id = p.category_id
+        LEFT JOIN purchase_info pi ON p.id = pi.product_id
+        LEFT JOIN purchase pu ON pi.purchase_id = pu.id
+        GROUP BY c.id, c.label;
+        """
+
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        category_count_dict = {row[0]: row[2] for row in results}
+        
+        max_category_id = max(category_count_dict.keys()) if category_count_dict else 0
+        category_count = [0] * (max_category_id)
+
+        for category_id, count in category_count_dict.items():
+            category_count[category_id - 1] = count
+        
+        return category_count
+
+    except Exception as error:
+        print(f"Error: {error}")
+        return [0] * len(get_all_categories(connection))
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def get_all_categories(connection):
+    try:
+        categories = []
+        cursor = connection.cursor()
+
+        query = """
+        SELECT id, label
+        FROM categories
+        ORDER BY id;
+        """
+
+        cursor.execute(query)
+        results = cursor.fetchall()
+
+        for row in results:
+            category = {
+                "id": row[0],
+                "label": row[1]
+            }
+            categories.append(category)
+            
+        return categories
+
+    except Exception as error:
+        print(f"Error: {error}")
+        return []
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def insert_admin_record(connection, admin_login, admin_password):
+    try:
+        cursor = connection.cursor()
+        print(admin_login)
+        print(admin_password)
+
+        query = """
+        INSERT INTO admins (login, password, level) VALUES (%s, %s, %s) RETURNING *;
+        """
+
+        cursor.execute(query, (admin_login, admin_password, 0))
+        connection.commit()
+
+        return True
+
+    except Exception as error:
+        print(f"Error inserting record: {error}")
+        connection.rollback()
+        return False
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def check_admin_exists(connection, admin_login, admin_password):
+    try:
+        cursor = connection.cursor()
+
+        print(admin_login)
+        print(admin_password)
+
+        query = """
+        SELECT COUNT(*)
+        FROM admins
+        WHERE login = %s AND password = %s;
+        """
+        cursor.execute(query, (admin_login, admin_password))
+        count = cursor.fetchone()[0]
+        exists = count > 0
+
+        return exists
+
+    except Exception as error:
+        print(f"Error checking record existence: {error}")
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def check_admin_exists(connection, admin_login, admin_password):
+    try:
+        cursor = connection.cursor()
+
+        print(admin_login)
+        print(admin_password)
+
+        query = """
+        SELECT COUNT(*)
+        FROM admins
+        WHERE login = %s AND password = %s;
+        """
+        cursor.execute(query, (admin_login, admin_password))
+        count = cursor.fetchone()[0]
+        exists = count > 0
+
+        return exists
+
+    except Exception as error:
+        print(f"Error checking record existence: {error}")
+
+    finally:
+        if cursor:
+            cursor.close()
+
+
+def insert_event_record(connection, name, description, start, end, category, sale):
+    try:
+        cursor = connection.cursor()
+        query = """
+        INSERT INTO events (name, description, start_date, end_date, category_id, sale) VALUES (%s, %s, %s, %s, %s, %s) RETURNING *;
+        """
+
+        cursor.execute(query, (name, description, to_db_readable_date(start, False), to_db_readable_date(end, False), category, sale))
+        print(cursor.fetchone())
+        connection.commit()
+
+        return True
+
+    except Exception as error:
+        print(f"Error inserting event record: {error}")
+        connection.rollback()
+        return False
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def update_active(connection, discount_type, status):
+    try:
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            UPDATE discount_type
+            SET is_enabled = %s
+            WHERE name = %s
+        """, (status, discount_type.value))
+
+    except Exception as error:
+        print("Error in update_active: ", error)
+        connection.rollback()
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+def get_active(connection, discount_type):
+    try:
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            SELECT is_enabled
+            FROM discount_type
+            WHERE name = %s;
+        """, (discount_type.value, ))
+
+        return cursor.fetchone()[0]
+
+    except Exception as error:
+        print("Error in get_active: ", error)
+        connection.rollback()
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+def update_privilages(connection, privilages, discount_type_id):
+    try:
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT id, name, value, money_threshold, type_id FROM discount")
+        existing_discounts = {(row[0], "-1")[row[4] != discount_type_id]: row for row in cursor.fetchall()}
+        privilages_dict = {p['id']: p for p in privilages}
+
+        print("Existing:")
+        print(existing_discounts)
+        print("Obtained:")
+        print(privilages_dict)
+
+        for priv_id, priv in privilages_dict.items():
+            if priv_id in existing_discounts:
+                cursor.execute("""
+                    UPDATE discount
+                    SET name = %s, value = %s, money_threshold = %s
+                    WHERE id = %s AND type_id = %s
+                """, (priv.get('label'), priv.get('sale').get('all'), priv.get('starts_from'), priv_id, discount_type_id))
+            else:
+                print("New:")
+                print(priv_id)
+                print(priv)
+                print(discount_type_id)
+                cursor.execute("""
+                    INSERT INTO discount (type_id, name, value, money_threshold)
+                    VALUES (%s, %s, %s, %s)
+                """, (discount_type_id, priv.get('label'), priv.get('sale').get('all'), priv.get('starts_from')))
+
+        print()
+        print(discount_type_id)
+        print()
+        for existing_id in existing_discounts.keys():
+            if existing_id not in privilages_dict:
+                print("Del")
+                print(existing_id)
+                cursor.execute("""
+                    DELETE FROM discount
+                    WHERE id = %s AND type_id = %s
+                """, (existing_id, discount_type_id, ))
+
+    except Exception as error:
+        print("Error in update_privilages: ", error)
+        connection.rollback()
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+
+def get_privilages(connection, discount_type_id):
+    try:
+        cursor = connection.cursor()
+        
+        query = """
+        SELECT d.id, d.name, d.value, d.money_threshold
+        FROM discount d
+        WHERE d.type_id = %s
+        """
+        
+        cursor.execute(query, (discount_type_id,))
+        rows = cursor.fetchall()
+
+        print(rows)
+        
+        privileges = []
+        for row in rows:
+            privilege = {
+                "id": row[0],  
+                "label": row[1],  
+                "sale": {
+                    "all": row[2], 
+                },
+                "starts_from": row[3],  
+            }
+            privileges.append(privilege)
+        
+        return privileges
+
+    except Exception as error:
+        print(f"Error: {error}")
+        return []
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+
+def update_user_to_discount(connection):
+    try:
+        cursor = connection.cursor()
+
+        cursor.execute("DELETE FROM user_to_discount;")
+
+        cursor.execute("SELECT id FROM users;")
+        users = cursor.fetchall()
+
+        for user in users:
+            user_id = user[0]
+
+            cursor.execute("""
+                SELECT SUM(p.price_kopeck * pi.quantity) 
+                FROM purchase pu
+                JOIN purchase_info pi ON pu.id = pi.purchase_id
+                JOIN products p ON pi.product_id = p.id
+                WHERE pu.user_id = %s;
+            """, (user_id,))
+            total_sum = cursor.fetchone()[0] or 0
+
+            query = """
+                SELECT d.id 
+                FROM discount d
+                JOIN discount_type dt ON d.type_id = %s
+                WHERE d.money_threshold < %s
+                ORDER BY d.money_threshold DESC
+                LIMIT 1;
+            """
+
+            cursor.execute(query, (1, total_sum, ))
+            cursor.execute(query, (2, total_sum, ))
+
+            discount = cursor.fetchone()
+            if discount:
+                discount_id = discount[0]
+                cursor.execute("""
+                    INSERT INTO "User  to disount" (user_id, discount_id) 
+                    VALUES (%s, %s);
+                """, (user_id, discount_id))
+
+    except Exception as error:
+        print(f"An error occurred: {error}")
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
 
 
 def get_visits_count(connection, start_date, end_date):
