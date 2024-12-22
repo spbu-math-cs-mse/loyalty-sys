@@ -1,4 +1,5 @@
 import { createApp } from "vue";
+import { createPinia } from "pinia";
 import { definePreset } from "@primevue/themes";
 import App from "./App.vue";
 import router from "./router";
@@ -61,6 +62,7 @@ const Noir = definePreset(Aura, {
   },
 });
 
+const pinia = createPinia();
 const app = createApp(App);
 app
   .use(PrimeVue, {
@@ -255,10 +257,35 @@ app
             delete: "Уровень удален",
             max: "Максимальное количество уровней",
           },
+          product: {
+            nullData: "Выберите дату",
+            nullProduct: "Выберите товар",
+          },
+          admin: {
+            add: "Администратор добавлен",
+            edit: "Администратор изменен",
+            delete: "Администратор удален",
+          },
+          event: {
+            add: "Событие добавлено",
+            edit: "Событие изменено",
+            delete: "Событие удалено",
+          },
+        },
+        forms: {
+          login: "Войти",
+          logout: "Выйти",
+          loginTitle: "Логин",
+          password: "Пароль",
+          nullLogin: "Логин не может быть пустым",
+          nullPassword: "Пароль не может быть пустым",
+          incorrectLogin: "Неверный логин",
+          incorrectPassword: "Неверный пароль",
         },
       },
     },
   })
+  .use(pinia)
   .use(router)
   .use(ToastService)
   .directive("animateonscroll", AnimateOnScroll)

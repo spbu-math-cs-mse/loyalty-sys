@@ -1,19 +1,189 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { Form } from "@primevue/forms";
 import { useToast } from "primevue/usetoast";
 import { usePrimeVue } from "primevue/config";
+import { useDateFormater } from "@/stores/dateFormater";
+import { Form } from "@primevue/forms";
 import { $dt } from "@primevue/themes";
 
 import Chart from "primevue/chart";
-import SectionHeaderInfo from "@/components/SectionHeaderInfo.vue";
-import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 import Button from "primevue/button";
 import DatePicker from "primevue/datepicker";
 import AutoComplete from "primevue/autocomplete";
+import SectionHeaderInfo from "@/components/SectionHeaderInfo.vue";
+import ChartNumberDisplay from "@/components/ChartNumberDisplay.vue";
 
 const axios = require("axios");
 const primevue = usePrimeVue();
+const languageConfig = primevue.config.locale;
+const toastConfig = languageConfig.toast;
+
+const categoryList = ref([]);
+
+const productList = ref([]);
+const selectedProductList = ref([]);
+const filteredProductList = ref([]);
+
+const searchProduct = (event) => {
+  if (!event.query.trim().length) {
+    filteredProductList.value = [...productList.value];
+  } else {
+    filteredProductList.value = productList.value.filter((product) => {
+      return product.label.toLowerCase().startsWith(event.query.toLowerCase());
+    });
+  }
+};
+
+const onProductFormSubmit = (e) => {
+  if (productDates.value[0] == null) {
+    toast.add({
+      severity: toastConfig.severity.error,
+      summary: toastConfig.summary.error,
+      detail: toastConfig.detail.product.nullData,
+      life: 4000,
+    });
+    return;
+  }
+  if (selectedProductList.value.length === 0) {
+    toast.add({
+      severity: toastConfig.severity.error,
+      summary: toastConfig.summary.error,
+      detail: toastConfig.detail.product.nullProduct,
+      life: 4000,
+    });
+    return;
+  }
+  if (productDates.value[1] == null && productDates.value[1] !== undefined) {
+    productDates.value[1] = today;
+  }
+  if (e.valid) {
+    setChartLineData();
+  }
+};
+
+let today = new Date();
+let currentMonth = today.getMonth();
+let currentYear = today.getFullYear();
+
+const productDates = ref([]);
+const productMinDate = ref(new Date());
+const productMaxDate = ref(new Date());
+
+productMinDate.value.setMonth(currentMonth - 1);
+productMinDate.value.setFullYear(currentYear - 1);
+productMaxDate.value.setMonth(currentMonth);
+productMaxDate.value.setFullYear(currentYear);
+
+const fetchDate = ref({
+  start: today.toISOString().substring(0, 7),
+  end: today.toISOString().substring(0, 7),
+});
+
+const dateFormater = useDateFormater();
+
+const getMonthsInRange = (fromDate, toDate) => {
+  if (!fromDate || !toDate) {
+    return [];
+  }
+  const fromYear = fromDate.getFullYear();
+  const fromMonth = fromDate.getMonth();
+  const toYear = toDate.getFullYear();
+  const toMonth = toDate.getMonth();
+  const months = [];
+
+  for (let year = fromYear; year <= toYear; year++) {
+    let monthNum = year === fromYear ? fromMonth : 0;
+    const monthLimit = year === toYear ? toMonth : 11;
+
+    for (; monthNum <= monthLimit; monthNum++) {
+      months.push(primevue.config.locale.monthNames[monthNum]);
+    }
+  }
+  return months;
+};
+
+onMounted(() => {
+  chartMoreBuysOptions.value = setChartDoughnutOptions("Кто чаще покупает");
+  chartBirthdayOptions.value = setChartDoughnutOptions("Дни рождения");
+  chartCategoryOptions.value = setChartDoughnutOptions("Покупки в категориях");
+
+  chartLineOptions.value = setChartLineOptions();
+  chartLineConfig.value = setChartDoughnutConfig();
+  chartDoughnutConfig.value = setChartDoughnutConfig();
+
+  axios
+    .all([
+      axios.get("http://84.201.143.213:5000/data/total_purchases", {
+        params: fetchDate,
+      }),
+      axios.get("http://84.201.143.213:5000/data/average_check", {
+        params: fetchDate,
+      }),
+      axios.get("http://84.201.143.213:5000/data/median_check", {
+        params: fetchDate,
+      }),
+      axios.get("http://84.201.143.213:5000/data/visitor_count", {
+        params: fetchDate,
+      }),
+      axios.get("http://84.201.143.213:5000/data/buys_more"),
+      axios.get("http://84.201.143.213:5000/data/buys_bithdays"),
+      axios.get("http://84.201.143.213:5000/data/buys_category"),
+      axios.get("http://84.201.143.213:5000/data/products"),
+      axios.get("http://84.201.143.213:5000/data/categories"),
+    ])
+    .then(
+      axios.spread(
+        (
+          totalPurchasesResponse,
+          averageCheckResponse,
+          medianСheckResponse,
+          visitorCountResponse,
+          chartMoreBuysDataResponse,
+          chartBirthdayDataResponse,
+          chartCategoryDataResponse,
+          productListResponse,
+          categoryListResponse
+        ) => {
+          totalPurchases.value = totalPurchasesResponse.data.total_purchases;
+          averageCheck.value = averageCheckResponse.data.average_check;
+          medianСheck.value = medianСheckResponse.data.median_check;
+          visitorCount.value = visitorCountResponse.data.visitor_count;
+
+          chartMoreBuysDataset.value = chartMoreBuysDataResponse.data;
+          chartBirthdayDataset.value = chartBirthdayDataResponse.data;
+          chartCategoryDataset.value = chartCategoryDataResponse.data;
+
+          productList.value = productListResponse.data;
+          categoryList.value = categoryListResponse.data;
+        }
+      )
+    )
+    .catch((error) => {
+      console.log(error);
+    });
+});
+
+const totalPurchases = ref();
+const averageCheck = ref();
+const medianСheck = ref();
+const visitorCount = ref();
+
+const chartMoreBuysDataset = ref([]);
+const chartBirthdayDataset = ref([]);
+const chartCategoryDataset = ref([]);
+
+const chartMoreBuysData = ref();
+const chartBirthdayData = ref();
+const chartCategoryData = ref();
+
+const chartMoreBuysOptions = ref();
+const chartBirthdayOptions = ref();
+const chartCategoryOptions = ref();
+const chartDoughnutConfig = ref();
+
+const chartLineOptions = ref();
+const chartLineConfig = ref();
+const chartLineData = ref({});
 
 const getColorsForCharts = (count = 0, power = 500) => {
   const defaultColors = [
@@ -43,147 +213,7 @@ const getColorsForCharts = (count = 0, power = 500) => {
   return defaultColors.slice(0, count).map((x) => $dt(x).value);
 };
 
-const productList = ref();
-const selectedProductList = ref([]);
-const filteredProductList = ref([]);
-
-const searchProduct = (event) => {
-  if (!event.query.trim().length) {
-    filteredProductList.value = [...productList.value];
-  } else {
-    filteredProductList.value = productList.value.filter((product) => {
-      return product.label.toLowerCase().startsWith(event.query.toLowerCase());
-    });
-  }
-};
-
-const onProductFormSubmit = (e) => {
-  if (productDates.value[0] == null) {
-    toast.add({
-      severity: "error",
-      summary: "Ошибка",
-      detail: "Выберите дату",
-      life: 4000,
-    });
-    return;
-  }
-  if (selectedProductList.value.length === 0) {
-    toast.add({
-      severity: "error",
-      summary: "Ошибка",
-      detail: "Выберите товар",
-      life: 4000,
-    });
-    return;
-  }
-  if (productDates.value[1] == null && productDates.value[1] !== undefined) {
-    productDates.value[1] = today;
-  }
-  if (e.valid) {
-    setChartLineData();
-  }
-};
-
-let today = new Date();
-let currentMonth = today.getMonth();
-let currentYear = today.getFullYear();
-
-const totalPurchases = ref();
-const averageCheck = ref();
-const visitorCount = ref();
-
-const fetchDate = ref({
-  start: today.toISOString().substring(0, 7),
-  end: today.toISOString().substring(0, 7),
-});
-
-const formatDateToYYYYMM = (date) => {
-  return date.toLocaleString('en-CA', { year: 'numeric', month: '2-digit' }).replace('/', '-');
-}
-
-const productDates = ref([]);
-
-const productMinDate = ref(new Date());
-const productMaxDate = ref(new Date());
-
-productMinDate.value.setMonth(currentMonth - 1);
-productMinDate.value.setFullYear(currentYear - 1);
-productMaxDate.value.setMonth(currentMonth);
-productMaxDate.value.setFullYear(currentYear);
-
-const getMonthsInRange = (fromDate, toDate) => {
-  if (!fromDate || !toDate) {
-    return [];
-  }
-  const fromYear = fromDate.getFullYear();
-  const fromMonth = fromDate.getMonth();
-  const toYear = toDate.getFullYear();
-  const toMonth = toDate.getMonth();
-  const months = [];
-
-  for (let year = fromYear; year <= toYear; year++) {
-    let monthNum = year === fromYear ? fromMonth : 0;
-    const monthLimit = year === toYear ? toMonth : 11;
-
-    for (; monthNum <= monthLimit; monthNum++) {
-      months.push(primevue.config.locale.monthNames[monthNum]);
-    }
-  }
-  return months;
-};
-
-onMounted(() => {
-  chartDoughnutOptions.value = setChartOptionsDoughnut();
-  chartDoughnutConfig.value = setChartConfigDoughnut();
-
-  chartLineOptions.value = setChartOptionsLine();
-  chartLineConfig.value = setChartConfigDoughnut();
-
-  axios
-    .all([
-      axios.get("http://84.201.143.213:5000/data/total_purchases", {
-        params: fetchDate,
-      }),
-      axios.get("http://84.201.143.213:5000/data/average_check", {
-        params: fetchDate,
-      }),
-      axios.get("http://84.201.143.213:5000/data/visitor_count", {
-        params: fetchDate,
-      }),
-      axios.get("http://84.201.143.213:5000/data/products"),
-    ])
-    .then(
-      axios.spread(
-        (
-          totalPurchasesResponse,
-          averageCheckResponse,
-          visitorCountResponse,
-          productListResponse
-        ) => {
-          totalPurchases.value = totalPurchasesResponse.data.total_purchases;
-          averageCheck.value = averageCheckResponse.data.average_check;
-          visitorCount.value = visitorCountResponse.data.visitor_count;
-
-          productList.value = productListResponse.data;
-        }
-      )
-    )
-    .catch((error) => {
-      console.log(error);
-    });
-});
-
-const chartData = ref();
-
-const chartDoughnutOptions = ref();
-const chartDoughnutConfig = ref();
-
-const chartLineOptions = ref();
-const chartLineConfig = ref();
-const chartLineData = ref({});
-const flag = ref(1);
-
-const setChartConfigDoughnut = () => {
+const setChartDoughnutConfig = () => {
   return {
     id: "customCanvasBackgroundColor",
     beforeDraw: (chart, args, options) => {
@@ -197,10 +227,7 @@ const setChartConfigDoughnut = () => {
   };
 };
 
-/* 
-  TODO: delete switch construction and flag definition after adding backend interaction
-*/
-const setChartDoughnutData = () => {
+const setMoreBuysDoughnutData = () => {
   const colors = [
     $dt("cyan.500").value,
     $dt("orange.500").value,
@@ -212,50 +239,57 @@ const setChartDoughnutData = () => {
     $dt("gray.400").value,
   ];
 
-  switch (flag.value) {
-    case 1:
-      chartData.value = {
-        labels: ["Мужчины", "Женщины", "Неизвестно"],
-        datasets: [
-          {
-            data: [75, 223, 101],
-            backgroundColor: colors,
-            hoverBackgroundColor: hoverColors,
-            borderRadius: 2,
-          },
-        ],
-      };
-      break;
+  chartMoreBuysData.value = {
+    labels: ["Мужчины", "Женщины", "Неизвестно"],
+    datasets: [
+      {
+        data: chartMoreBuysDataset,
+        backgroundColor: colors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius: 2,
+      },
+    ],
+  };
 
-    case 2:
-      chartData.value = {
-        labels: ["Мужчины", "Женщины", "Хз.. Кто-то"],
-        datasets: [
-          {
-            data: [1540, 2625, 10152],
-            backgroundColor: colors,
-            hoverBackgroundColor: hoverColors,
-            borderRadius: 2,
-          },
-        ],
-      };
-      break;
+  return chartMoreBuysData.value;
+};
 
-    default:
-      chartData.value = {
-        labels: ["Мужчины", "Женщины", "В душе не чаю кто ты, Воин!"],
-        datasets: [
-          {
-            data: [100, 62500, 1],
-            backgroundColor: colors,
-            hoverBackgroundColor: hoverColors,
-            borderRadius: 2,
-          },
-        ],
-      };
-  }
+const setBirthdayDoughnutData = () => {
+  const colors = getColorsForCharts(12, 500);
+  const hoverColors = getColorsForCharts(12, 400);
 
-  return chartData.value;
+  chartBirthdayData.value = {
+    labels: languageConfig.monthNames,
+    datasets: [
+      {
+        data: chartBirthdayDataset,
+        backgroundColor: colors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius: 2,
+      },
+    ],
+  };
+
+  return chartBirthdayData.value;
+};
+
+const setCategoryDoughnutData = () => {
+  const colors = getColorsForCharts(3, 500);
+  const hoverColors = getColorsForCharts(3, 400);
+
+  chartCategoryData.value = {
+    labels: categoryList.value.map((x) => x.label),
+    datasets: [
+      {
+        data: chartCategoryDataset,
+        backgroundColor: colors,
+        hoverBackgroundColor: hoverColors,
+        borderRadius: 2,
+      },
+    ],
+  };
+
+  return chartCategoryData.value;
 };
 
 const setChartLineData = () => {
@@ -274,8 +308,8 @@ const setChartLineData = () => {
       .get("http://84.201.143.213:5000/data/values", {
         params: {
           product_id: selectedProductList.value[i].id,
-          start_date: formatDateToYYYYMM(productDates.value[0]),
-          end_date: formatDateToYYYYMM(productDates.value[1]),
+          start_date: dateFormater.toYYYYMM(productDates.value[0]),
+          end_date: dateFormater.toYYYYMM(productDates.value[1]),
         },
       })
       .then((response) => {
@@ -294,7 +328,7 @@ const setChartLineData = () => {
   }
 };
 
-const setChartOptionsLine = () => {
+const setChartLineOptions = () => {
   const documentStyle = getComputedStyle(document.documentElement);
   const textColorSecondary = documentStyle.getPropertyValue(
     "--p-text-muted-color"
@@ -303,8 +337,7 @@ const setChartOptionsLine = () => {
     "--p-content-border-color"
   );
 
-  const a = setChartOptionsDoughnut();
-  a.plugins.title.display = false;
+  const a = setChartDoughnutOptions();
   a.layout.padding.left = 0;
   a.scales = {
     x: {
@@ -329,7 +362,7 @@ const setChartOptionsLine = () => {
   return a;
 };
 
-const setChartOptionsDoughnut = () => {
+const setChartDoughnutOptions = (str = "") => {
   const documentStyle = getComputedStyle(document.documentElement);
   const textColor = documentStyle.getPropertyValue("--p-text-color");
   const backgroundColor = documentStyle.getPropertyValue("--p-menu-background");
@@ -347,8 +380,8 @@ const setChartOptionsDoughnut = () => {
         },
       },
       title: {
-        display: true,
-        text: "Кто чаще покупает",
+        display: !!str,
+        text: str,
         align: "start",
         color: textColor,
         padding: 8,
@@ -400,25 +433,55 @@ const toast = useToast();
       <div class="border-round-lg overflow-hidden shadow-1 bg-white">
         <Chart
           type="doughnut"
-          :width="500"
+          :width="400"
           :height="300"
-          :data="setChartDoughnutData()"
+          :data="setMoreBuysDoughnutData()"
           :plugins="[chartDoughnutConfig]"
-          :options="chartDoughnutOptions"
+          :options="chartMoreBuysOptions"
           class=""
         />
       </div>
 
-      <div class="flex flex-column gap-4 w-full lg:w-auto">
+      <div class="border-round-lg overflow-hidden shadow-1 bg-white">
+        <Chart
+          type="doughnut"
+          :width="400"
+          :height="300"
+          :data="setBirthdayDoughnutData()"
+          :plugins="[chartDoughnutConfig]"
+          :options="chartBirthdayOptions"
+          class=""
+        />
+      </div>
+
+      <div class="border-round-lg overflow-hidden shadow-1 bg-white">
+        <Chart
+          type="doughnut"
+          :width="400"
+          :height="300"
+          :data="setCategoryDoughnutData()"
+          :plugins="[chartDoughnutConfig]"
+          :options="chartCategoryOptions"
+          class=""
+        />
+      </div>
+
+      <div class="flex flex-wrap gap-4 w-full">
         <ChartNumberDisplay
           title="Cумма покупок"
-          :number="(totalPurchases/100).toFixed(2)"
+          :number="(totalPurchases / 100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
         <ChartNumberDisplay
           title="Средний чек"
-          :number="(averageCheck/100).toFixed(2)"
+          :number="(averageCheck / 100).toFixed(2)"
+          money="rub"
+          afterIcon=""
+        />
+        <ChartNumberDisplay
+          title="Медианный чек"
+          :number="(medianСheck / 100).toFixed(2)"
           money="rub"
           afterIcon=""
         />
@@ -456,7 +519,7 @@ const toast = useToast();
             <DatePicker
               v-model="productDates"
               view="month"
-              dateFormat="mm/yy"
+              dateFormat="mm.yy"
               selectionMode="range"
               iconDisplay="input"
               inputId="products_range"

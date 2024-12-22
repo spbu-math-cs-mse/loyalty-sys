@@ -18,68 +18,20 @@ const product = ref({});
 const settingsEmitObj = ref();
 const deleteProductDialog = ref(false);
 
-const settings = reactive({
-  percent: {
-    settings: {
-      active: false,
-      levels: 5,
-    },
-    privileges: [
-      {
-        id: "AS765HGJAL",
-        label: "Бронзовый",
-        sale: {
-          all: 5,
-        },
-        starts_from: 0,
-      },
-      {
-        id: "AS76AHGJAL",
-        label: "Серебряный",
-        sale: {
-          all: 15,
-        },
-        starts_from: 5000,
-      },
-      {
-        id: "BS765HGJAL",
-        label: "Золотой",
-        sale: {
-          all: 25,
-        },
-        starts_from: 50000,
-      },
-    ],
-  },
-  point: {
-    settings: {
-      active: false,
-      levels: 15,
-    },
-    privileges: [
-      {
-        id: "1S765HGJAL",
-        label: "Уровень 1",
-        sale: {
-          all: 0.5,
-        },
-        starts_from: 0,
-      },
-    ],
-  },
-});
+let settings = reactive({ percent: {}, point: {} });
+const pending = ref(true);
 
 const value = ref(0);
 const toolbarSettings = [
   {
     label: "Процентная",
     component: PercentView,
-    props: settings.percent,
+    key: "percent",
   },
   {
     label: "Бальная",
     component: PointView,
-    props: settings.point,
+    key: "point",
   },
 ];
 
@@ -94,33 +46,36 @@ const deletePrivilege = () => {
     settingsEmitObj.value
   ].privileges.filter((items) => items.label !== product.value.label);
   deleteProductDialog.value = false;
-  tupayaRuchkaSend()
+  tupayaRuchkaSend();
 };
 
 onMounted(() => {
-  axios.get("http://84.201.143.213:5000/privileges")
-  .then((response) => {
-    settings.value = response.data;
-    console.log(response)
-  })
-  .catch((error) =>{
-    console.log(error)
-  })
-})
+  axios
+    .get("http://84.201.143.213:5000/privileges")
+    .then((response) => {
+      settings.percent = response.data.percent;
+      settings.point = response.data.point;
+      pending.value = false;
+      console.log(settings);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+});
 
 const tupayaRuchkaSend = () => {
-  axios.post("http://84.201.143.213:5000/privileges", {
-    settings: settings,
-  })
-  .then((response) => {
-    console.log("SEND NEW PRIVILEGES SETTINGS");
-    console.log(response);
-  })
-  .catch((error) =>{
-    console.log(error)
-  })
-}
-
+  axios
+    .post("http://84.201.143.213:5000/privileges", {
+      settings: settings,
+    })
+    .then((response) => {
+      console.log("SEND NEW PRIVILEGES SETTINGS");
+      console.log(response);
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
 </script>
 
 <template>
@@ -139,11 +94,11 @@ const tupayaRuchkaSend = () => {
       </template>
     </Toolbar>
 
-    <div>
+    <div v-if="!pending">
       <KeepAlive>
         <component
           :is="toolbarSettings[value].component"
-          :settingsProps="toolbarSettings[value].props"
+          :settingsProps="settings"
           @confirm-delete-privilege="confirmDeletePrivilege($event)"
           @syncrone-settings="tupayaRuchkaSend"
           class="mt-0 settings__component"

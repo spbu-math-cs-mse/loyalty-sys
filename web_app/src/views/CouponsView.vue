@@ -331,7 +331,7 @@ products.value = [
             :invalid="submitted && !product.code"
             fluid
           />
-          <small v-if="submitted && !product.code" class="text-red-500"
+          <small v-show="submitted && !product.code" class="text-red-500"
             >Это обязательное поле.</small
           >
         </div>
