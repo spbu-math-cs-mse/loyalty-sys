@@ -466,7 +466,7 @@ const toast = useToast();
         />
       </div>
 
-      <div class="flex flex-wrap gap-4 w-full">
+      <div class="flex flex-wrap gap-4 w-full justify-content-center lg:justify-content-start">
         <ChartNumberDisplay
           title="Cумма покупок"
           :number="(totalPurchases / 100).toFixed(2)"

@@ -20,5 +20,5 @@ class BotMessages(Enum):
     BIRTHDAY_DAY_CHOICE = "Выберите день рождения:"
     BIRTHDAY_CHOICE_RESULT = "Вы выбрали дату рождения: "
     BIRTHDAY_CHOICE_ERROR = "Ошибка обновления даты рождения:"
-    LOYALTY_LEVEL_INCREASING = "Поздравляем! Ваш уровень лояльности повышен до"
+    LOYALTY_LEVEL_INCREASING = "Поздравляем!\nВаш уровень лояльности повышен до"
     NEW_EVENT = "Новое событие:"

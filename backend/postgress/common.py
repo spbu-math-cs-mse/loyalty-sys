@@ -2,6 +2,8 @@ from postgress.p_utils import (
     to_db_readable_date,
 )
 
+import requests
+
 from postgress.enums import DiscountType
 
 from psycopg2 import sql
@@ -476,8 +478,6 @@ def get_all_categories(connection):
 def insert_admin_record(connection, admin_login, admin_password):
     try:
         cursor = connection.cursor()
-        print(admin_login)
-        print(admin_password)
 
         query = """
         INSERT INTO admins (login, password, level) VALUES (%s, %s, %s) RETURNING *;
@@ -501,9 +501,6 @@ def check_admin_exists(connection, admin_login, admin_password):
     try:
         cursor = connection.cursor()
 
-        print(admin_login)
-        print(admin_password)
-
         query = """
         SELECT COUNT(*)
         FROM admins
@@ -526,9 +523,6 @@ def check_admin_exists(connection, admin_login, admin_password):
     try:
         cursor = connection.cursor()
 
-        print(admin_login)
-        print(admin_password)
-
         query = """
         SELECT COUNT(*)
         FROM admins
@@ -548,6 +542,64 @@ def check_admin_exists(connection, admin_login, admin_password):
             cursor.close()
 
 
+
+def broadcast_event(connection, name, description, start, end, category, sale):
+    try:
+        cursor = connection.cursor()
+        query = """
+        SELECT chat_id FROM users;
+        """
+ 
+        cursor.execute(query)
+        chats = cursor.fetchall()
+        
+        url = "http://84.201.143.213:5050/new_event/"
+        for chat_id in chats:
+            data = {
+                "chat_id": chat_id[0],
+                "name": name,
+                "description": description,
+                "start_date": start,
+                "end_date": end
+            }
+            response = requests.post(url, json = data)
+
+        return True
+
+    except Exception as error:
+        print(f"Error broadcasting event: {error}")
+        return False
+
+    finally:
+        if cursor:
+            cursor.close()
+
+def loyalty_update(connection, user_id, loyalty_level):
+    try:
+        cursor = connection.cursor()
+        query = """
+        SELECT chat_id FROM users WHERE id = %s;
+        """
+ 
+        cursor.execute(query, (user_id, ))
+        chat_id = cursor.fetchone()
+        url = "http://84.201.143.213:5050/loyalty_updates/"
+        data = {
+            "chat_id": chat_id[0],
+            "loyalty_level": loyalty_level
+        }
+        response = requests.post(url, json = data)
+
+        return True
+
+    except Exception as error:
+        print(f"Error in loyalty_update: {error}")
+        return False
+
+    finally:
+        if cursor:
+            cursor.close()
+
 def insert_event_record(connection, name, description, start, end, category, sale):
     try:
         cursor = connection.cursor()
@@ -556,7 +608,6 @@ def insert_event_record(connection, name, description, start, end, category, sal
         """
 
         cursor.execute(query, (name, description, to_db_readable_date(start, False), to_db_readable_date(end, False), category, sale))
-        print(cursor.fetchone())
         connection.commit()
 
         return True
@@ -620,11 +671,6 @@ def update_privilages(connection, privilages, discount_type_id):
         existing_discounts = {(row[0], "-1")[row[4] != discount_type_id]: row for row in cursor.fetchall()}
         privilages_dict = {p['id']: p for p in privilages}
 
-        print("Existing:")
-        print(existing_discounts)
-        print("Obtained:")
-        print(privilages_dict)
-
         for priv_id, priv in privilages_dict.items():
             money_threashold = priv.get('starts_from') * 100
             if priv_id in existing_discounts:
@@ -634,22 +680,13 @@ def update_privilages(connection, privilages, discount_type_id):
                     WHERE id = %s AND type_id = %s
                 """, (priv.get('label'), priv.get('sale').get('all'), money_threashold, priv_id, discount_type_id))
             else:
-                print("New:")
-                print(priv_id)
-                print(priv)
-                print(discount_type_id)
                 cursor.execute("""
                     INSERT INTO discount (type_id, name, value, money_threshold)
                     VALUES (%s, %s, %s, %s)
                 """, (discount_type_id, priv.get('label'), priv.get('sale').get('all'), money_threashold))
 
-        print()
-        print(discount_type_id)
-        print()
         for existing_id in existing_discounts.keys():
             if existing_id not in privilages_dict:
-                print("Del")
-                print(existing_id)
                 cursor.execute("""
                     DELETE FROM discount
                     WHERE id = %s AND type_id = %s
@@ -709,12 +746,20 @@ def get_privilages(connection, discount_type_name):
 def update_user_to_discount(connection, target_user_id = None):
     try:
         cursor = connection.cursor()
+        old_privilaged = {}
 
-        partial_delete = (" WHERE user_id = " + str(target_user_id) ,"")[target_user_id == None]
+        partial_delete = (" WHERE user_id = " + str(target_user_id) + " RETURNING *", "")[target_user_id == None]
 
         cursor.execute("DELETE FROM user_to_discount" + partial_delete + ";")
 
-        cursor.execute("SELECT id FROM users;")
+        if (target_user_id != None):
+            for d_id in [ row[2] for row in cursor.fetchall()]:
+                cursor.execute("SELECT type_id, money_threshold FROM discount WHERE id = %s;", (d_id, ))
+                result = cursor.fetchone()
+                old_privilaged[result[0]] = result[1]
+        
+        partial_select = (" WHERE id = " + str(target_user_id), "")[target_user_id == None]
+        cursor.execute("SELECT id FROM users" + partial_select + ";")
         users = cursor.fetchall()
 
         for user in users:
@@ -733,7 +778,7 @@ def update_user_to_discount(connection, target_user_id = None):
             total_sum = cursor.fetchone()[0] or 0
 
             query = """
-                SELECT d.id 
+                SELECT d.id, d.type_id, d.money_threshold, d.name, d.value, dt.name, dt.is_enabled
                 FROM discount d
                 JOIN discount_type dt ON d.type_id = dt.id
                 WHERE d.money_threshold <= %s AND dt.name = %s
@@ -744,19 +789,22 @@ def update_user_to_discount(connection, target_user_id = None):
             cursor.execute(query, (total_sum, DiscountType.SALE.value, ))
             discount = cursor.fetchone()
 
-            print(discount)
             if discount:
                 discount_id = discount[0]
                 cursor.execute("""
                     INSERT INTO user_to_discount (user_id, discount_id) 
                     VALUES (%s, %s);
                 """, (user_id, discount_id))
+
+                if (target_user_id != None):
+                    if (discount[2] > old_privilaged.get(discount[1], 1000000) and discount[6]):
+                        loyalty_update(connection, target_user_id, (discount[3], discount[4], discount[5]))
+                    
 
             
             cursor.execute(query, (total_sum, DiscountType.POINTS.value, ))
 
             discount = cursor.fetchone()
-            print(discount)
             if discount:
                 discount_id = discount[0]
                 cursor.execute("""
@@ -764,8 +812,12 @@ def update_user_to_discount(connection, target_user_id = None):
                     VALUES (%s, %s);
                 """, (user_id, discount_id))
 
+                if (target_user_id != None):
+                    if (discount[2] > old_privilaged.get(discount[1], 1000000) and discount[6]):
+                        loyalty_update(connection, target_user_id, (discount[3], discount[4], discount[5]))
+
     except Exception as error:
-        print(f"An error occurred: {error}")
+        print(f"An error occurred in update_user_to_discount: {error}")
         return None
 
     finally:

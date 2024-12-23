@@ -40,6 +40,7 @@ from postgress.common import (
     update_user_to_discount,
     get_active,
     get_privilages,
+    broadcast_event,
 )
 
 app = Flask(__name__)
@@ -480,6 +481,7 @@ def insert_event():
     try:
         connection = connection_pool.getconn()
         result = insert_event_record(connection, name, description, start, end, category, sale)
+        broadcast_event(connection, name, description, start, end, category, sale)
         return jsonify({"result": result})
     finally:
         connection_pool.putconn(connection)

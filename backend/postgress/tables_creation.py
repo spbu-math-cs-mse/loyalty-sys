@@ -2,11 +2,6 @@ from enums import (Gender, DiscountType)
 from psycopg2 import sql
 from flask import Flask, request, jsonify
 
-from common import (
-    update_active,
-    update_privilages,
-)
-
 from p_utils import (
     recreate_enum,
     recreate_table,
@@ -56,8 +51,31 @@ def recreate_discount_type_table(connection, should_drop=True, fill_table=True):
     if fill_table:
         fill_discount_type_table(connection)
 
+def fill_discount_table(connection):
+    try:
+        cursor = connection.cursor()
 
-def recreate_discount_table(connection, should_drop=True):
+        query = """
+            INSERT INTO discount (type_id, name, value, money_threshold)
+            VALUES (%s, %s, %s, %s)
+        """
+        
+        cursor.execute(query, (1, "Бронзовый", 5, 0))
+        cursor.execute(query, (1, "Серебряный", 15, 500000))
+        cursor.execute(query, (1, "Золотой", 25, 5000000))
+        cursor.execute(query, (2, "Базовый", 1, 0))
+
+    except Exception as error:
+        print("Error in update_privilages: ", error)
+        connection.rollback()
+        return None
+
+    finally:
+        if cursor:
+            cursor.close()
+        connection.commit()
+
+def recreate_discount_table(connection, should_drop=True, fill_table=True):
     recreate_table(
         connection,
         "discount",
@@ -70,6 +88,9 @@ def recreate_discount_table(connection, should_drop=True):
         """,
         should_drop,
     )
+    
+    if fill_table:
+        fill_discount_table(connection)
 
 
 def recreate_user_to_discount_table(connection, should_drop=True):
@@ -333,11 +354,5 @@ if __name__ == "__main__":
 
     recreate_admins_table(connection)
     recreate_events_table(connection)
-
-    update_active(connection, DiscountType.SALE, False)
-    update_active(connection, DiscountType.POINTS, False)
-
-    update_privilages(connection, default_privialge_settings["percent"]["privileges"], 1)
-    update_privilages(connection, default_privialge_settings["point"]["privileges"], 2)
 
     pool.putconn(connection)
