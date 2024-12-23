@@ -53,7 +53,7 @@ const formSubmit = () => {
         toast.add({
           severity: toastConfig.severity.success,
           summary: toastConfig.summary.successTitle,
-          detail: toastConfig.severity.admin.add,
+          detail: toastConfig.detail.admin.add,
           life: 3000,
         });
       })

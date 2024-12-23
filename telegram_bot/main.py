@@ -293,7 +293,7 @@ async def loyalty_update(request: Request):
 
 def send_loyalty_update_message(chat_id, loyalty_level):
     try:
-        message = f"{BotMessages.LOYALTY_LEVEL_INCREASING.value} {loyalty_level}!"
+        message = f"{BotMessages.LOYALTY_LEVEL_INCREASING.value} {loyalty_level[0]} (Тип: {loyalty_level[2]})\nТеперь значение вашей скидки составляет {loyalty_level[1]}%!"
         bot.send_message(chat_id, message)
     except Exception as e:
         print(f"{BotMessages.BACKEND_ERROR.value} {e}")
@@ -301,7 +301,9 @@ def send_loyalty_update_message(chat_id, loyalty_level):
 
 def send_new_event_message(chat_id, name, description, start_date, end_date):
     try:
-        message = f"{BotMessages.NEW_EVENT.value} {name} ({start_date-end_date})!\n\n{description}"
+        print(chat_id)
+        message = f"{BotMessages.NEW_EVENT.value} {name} ({start_date}-{end_date})!\n\n{description}"
+        print(message)
         bot.send_message(chat_id, message)
     except Exception as e:
         print(f"{BotMessages.BACKEND_ERROR.value} {e}")

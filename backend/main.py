@@ -4,24 +4,44 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from message import Message
 
+from utils import validate_date, get_gender
+
+from postgress.connection_setup import get_connections_pool
+
+from postgress.enums import(
+    DiscountType
+)
+
 from postgress.common import (
     find_or_create_user,
-    get_connections_pool,
     insert_purchase,
     insert_purchase_info,
     get_product_statistic,
     get_purchases_count,
+    get_loyalty_level,
     get_purchases_sum,
-    get_user_discount,
     get_average_purchase,
+    get_median_purchase,
+    get_user_birthdays_by_month,
+    get_all_categories,
+    get_products_count_by_category,
+    get_purchase_counts_by_gender,
+    insert_admin_record,
+    insert_event_record,
+    check_admin_exists,
     get_visits_count,
     get_visitors_count,
     get_all_products,
     set_gender,
-    set_user_discount,
+    set_birthday,
+    update_user_discount,
+    update_active,
+    update_privilages,
+    update_user_to_discount,
+    get_active,
+    get_privilages,
+    broadcast_event,
 )
-
-from utils import validate_date, get_gender, get_discount_type
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret"
@@ -34,6 +54,57 @@ connection_pool = None
 with app.app_context():
     connection_pool = get_connections_pool()
 
+@app.route("/privileges", methods=["GET"])
+def get_privileges():
+    try:
+        connection = connection_pool.getconn()
+        print(get_active(connection,  DiscountType.SALE))
+        print(get_active(connection,  DiscountType.POINTS))
+        print(get_privilages(connection, DiscountType.SALE.value))
+        print(get_privilages(connection, DiscountType.POINTS.value))
+        return jsonify({
+                "percent": {
+                  "settings": {
+                    "active": get_active(connection,  DiscountType.SALE),
+                    "levels": 5,
+                  },
+                  "privileges": get_privilages(connection, DiscountType.SALE.value),
+                },
+                "point": {
+                  "settings": {
+                    "active": get_active(connection,  DiscountType.POINTS),
+                    "levels": 15,
+                  },
+                  "privileges": get_privilages(connection, DiscountType.POINTS.value),
+                },
+            })
+    finally:
+        connection_pool.putconn(connection)
+    return jsonify({"message": "Feedback"}), 200
+    return jsonify(privileges), 200
+
+
+@app.route("/privileges", methods=["POST"])
+def send_privileges():
+    data = request.json.get("settings")
+    print(data)
+    percent_active = data.get("percent").get("settings").get("active")
+    percent_privilages = [ elem for elem in data.get("percent").get("privileges")] 
+    point_active = data.get("point").get("settings").get("active")
+    point_privilages = [ elem for elem in data.get("point").get("privileges")]
+    try:
+        connection = connection_pool.getconn()
+        update_active(connection, DiscountType.SALE, percent_active)
+        update_active(connection, DiscountType.POINTS, point_active)
+
+        update_privilages(connection, percent_privilages, 1)
+        update_privilages(connection, point_privilages, 2)
+
+        update_user_to_discount(connection)
+        return jsonify({})
+    finally:
+        connection_pool.putconn(connection)
+    return jsonify({"message": "Feedback"}), 200
 
 @app.route("/user", methods=["POST"])
 def create_user():
@@ -96,6 +167,8 @@ def record_purchase(user_id: int):
                 return jsonify({"message": Message.INVALID_PURCHASE_DATA.value}), 400
 
             insert_purchase_info(connection, purchase_id, product_id, quantity)
+
+        update_user_to_discount(connection, user_id)
 
         return (
             jsonify(
@@ -172,6 +245,62 @@ def get_average_check():
     finally:
         connection_pool.putconn(connection)
 
+@app.route("/data/median_check", methods=["GET"])
+def get_median_check():
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
+    if not validate_date(start_date) or not validate_date(end_date):
+        return jsonify({"message": Message.INVALID_DATE_FORMAT.value}), 400
+
+    try:
+        connection = connection_pool.getconn()
+        result = get_median_purchase(connection, start_date, end_date)
+        return jsonify({"median_check": result})
+    finally:
+        connection_pool.putconn(connection)
+
+@app.route("/data/buys_bithdays", methods=["GET"])
+def get_buys_bithdays():
+    try:
+        connection = connection_pool.getconn()
+        result = get_user_birthdays_by_month(connection)
+        print(result)
+        return result
+    finally:
+        connection_pool.putconn(connection)
+
+@app.route("/data/buys_category", methods=["GET"])
+def get_buys_category():
+    try:
+        print("get_buys_category")
+        connection = connection_pool.getconn()
+        result = get_products_count_by_category(connection)
+        print(result)
+        return jsonify(result)
+    finally:
+        connection_pool.putconn(connection)
+
+@app.route("/data/buys_more", methods=["GET"])
+def get_buys_more():
+    try:
+        print("buys_more")
+        connection = connection_pool.getconn()
+        result = get_purchase_counts_by_gender(connection)
+        return jsonify(result)
+    finally:
+        connection_pool.putconn(connection)
+
+@app.route("/data/categories", methods=["GET"])
+def get_categories():
+    try:
+        connection = connection_pool.getconn()
+        result = get_all_categories(connection)
+        print(result)
+        return result
+    finally:
+        connection_pool.putconn(connection)
+
 
 @app.route("/data/visitor_count", methods=["GET"])
 def get_visitor_count():
@@ -197,51 +326,53 @@ def get_products():
         return jsonify(
             [
                 {"id": id, "label": label, "price_copeck": price}
-                for id, label, price in result
+                for id, label, price, category in result
             ]
         )
     finally:
         connection_pool.putconn(connection)
 
 
-@app.route("/user/<int:user_id>/discount", methods=["GET"])
-def get_user_discount_api(user_id: int):
-    try:
-        connection = connection_pool.getconn()
-        result = get_user_discount(connection, user_id)
+# @app.route("/user/<int:user_id>/discount", methods=["GET"])
+# def get_user_discount_api(user_id: int):
+#     try:
+#         connection = connection_pool.getconn()
+#         # TODO: update
+#         result = get_loyalty_level(connection, user_id)
 
-        if result is None:
-            return (
-                jsonify({"type": "no discount yet", "value": None}),
-                200,
-            )
+#         if result is None:
+#             return (
+#                 jsonify({"type": "no discount yet", "value": None}),
+#                 200,
+#             )
 
-        discount_type, level = result
+#         discount_type, level = "Скидка", "Не определён" if len(result) == 0 else result[0]
 
-        return (
-            jsonify({"type": discount_type, "value": level}),
-            200,
-        )
-    finally:
-        connection_pool.putconn(connection)
+#         return (
+#             jsonify({"type": discount_type, "value": level}),
+#             200,
+#         )
+#     finally:
+#         connection_pool.putconn(connection)
 
 
-@app.route("/user/<int:user_id>/discount", methods=["PUT"])
-def set_user_discount_api(user_id: int):
-    try:
-        connection = connection_pool.getconn()
-        discount_id = request.json.get("discount_id")
-        if not discount_id:
-            return jsonify({"message": Message.NO_DISCOUNT.value}), 400
+# @app.route("/user/<int:user_id>/discount", methods=["PUT"])
+# def set_user_discount_api(user_id: int):
+#     try:
+#         connection = connection_pool.getconn()
+#         discount_id = request.json.get("discount_id")
+#         if not discount_id:
+#             return jsonify({"message": Message.NO_DISCOUNT.value}), 400
 
-        result = set_user_discount(connection, user_id, discount_id)
+#         # TODO: change to update_user_discount here
+#         result = set_user_discount(connection, user_id, discount_id)
 
-        if result is None:
-            return jsonify({"message": Message.INVALID_DISCOUNT.value}), 400
+#         if result is None:
+#             return jsonify({"message": Message.INVALID_DISCOUNT.value}), 400
 
-        return jsonify({"message": Message.DISCOUNT_UPDATED.value}), 200
-    finally:
-        connection_pool.putconn(connection)
+#         return jsonify({"message": Message.DISCOUNT_UPDATED.value}), 200
+#     finally:
+#         connection_pool.putconn(connection)
 
 
 @app.route("/user/<int:user_id>/total_purchases", methods=["GET"])
@@ -254,7 +385,7 @@ def get_user_total_purchases_api(user_id: int):
 
     try:
         connection = connection_pool.getconn()
-        result = get_purchases_sum(connection, start_date, end_date, user_id)
+        result = get_purchases_sum(connection, start_date, end_date, user_id) / 100
         return jsonify({"total_purchases": result})
     finally:
         connection_pool.putconn(connection)
@@ -262,8 +393,14 @@ def get_user_total_purchases_api(user_id: int):
 
 @app.route("/user/<int:user_id>/loyalty_level", methods=["GET"])
 def get_user_loyalty_level_api(user_id: int):
-    loyalty_level = "Серебряный"  # TODO: implement database function
-    return jsonify({"loyalty_level": loyalty_level})
+
+    try:
+        connection = connection_pool.getconn()
+        loyalty_level = get_loyalty_level(connection, user_id)
+        return jsonify({"loyalty_level": loyalty_level})
+    finally:
+        connection_pool.putconn(connection)
+
 
 
 @app.route("/user/<int:user_id>/gender", methods=["PUT"])
@@ -293,8 +430,61 @@ def update_user_birthday_api(user_id: int):
     if not birthday:
         return jsonify({"message": Message.BIRTHDAY_REQUIRED.value}), 400
 
-    # TODO: implement handling birthday in database
-    return jsonify(f"ok for {user_id}"), 200
+    try:
+        connection = connection_pool.getconn()
+        if set_birthday(connection, user_id, birthday):
+            return jsonify({"message": Message.BIRTHDAY_UPDATED.value}), 200
+        return jsonify({"message": Message.INVALID_BIRTHDAY.value}), 400
+    finally:
+        connection_pool.putconn(connection)
+
+
+@app.route("/login", methods=["POST"])
+def try_login():
+    data = request.json
+    admin_login = data.get("login")
+    admin_password = data.get("password")
+
+    try:
+        connection = connection_pool.getconn()
+        result = check_admin_exists(connection, admin_login, admin_password)
+        if (result):
+            return jsonify({"auth": True})
+        else:
+            return jsonify({"auth": False, "error": "INVALID_LOGIN"})
+    finally:
+        connection_pool.putconn(connection)
+
+@app.route("/register_admin", methods=["POST"])
+def insert_admin():
+    data = request.json
+    admin_login = data.get("login")
+    admin_password = data.get("password")
+
+    try:
+        connection = connection_pool.getconn()
+        insert_admin_record(connection, admin_login, admin_password)
+        return jsonify({})
+    finally:
+        connection_pool.putconn(connection)
+
+@app.route("/event", methods=["POST"])
+def insert_event():
+    data = request.json
+    name = data.get("title")
+    description = data.get("description")
+    start = data.get("range")[0]
+    end = data.get("range")[1]
+    category = data.get("category").get("id")
+    sale = data.get("sale")
+
+    try:
+        connection = connection_pool.getconn()
+        result = insert_event_record(connection, name, description, start, end, category, sale)
+        broadcast_event(connection, name, description, start, end, category, sale)
+        return jsonify({"result": result})
+    finally:
+        connection_pool.putconn(connection)
 
 
 if __name__ == "__main__":
