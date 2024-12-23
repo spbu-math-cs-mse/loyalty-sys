@@ -1,7 +1,13 @@
 from enums import (Gender, DiscountType)
 from psycopg2 import sql
+from flask import Flask, request, jsonify
 
-from utils import (
+from common import (
+    update_active,
+    update_privilages,
+)
+
+from p_utils import (
     recreate_enum,
     recreate_table,
 )
@@ -17,7 +23,6 @@ def recreate_enum_gender(connection, should_drop=True):
         f"{','.join([f"'{gender.value}'" for gender in Gender])}",
         should_drop,
     )
-
 
 # ================= DISCOUNT ==================
 
@@ -264,6 +269,49 @@ def recreate_events_table(connection, should_drop=True):
     )
 
 if __name__ == "__main__":
+    default_privialge_settings = {
+        "percent": {
+          "privileges": [
+            {
+              "id": "AS765HGJAL",
+              "label": "Бронзовый",
+              "sale": {
+                "all": 5,
+              },
+              "starts_from": 0,
+            },
+            {
+              "id": "AS76AHGJAL",
+              "label": "Серебряный",
+              "sale": {
+                "all": 15,
+              },
+              "starts_from": 5000,
+            },
+            {
+              "id": "BS765HGJAL",
+              "label": "Золотой",
+              "sale": {
+                "all": 25,
+              },
+              "starts_from": 50000,
+            },
+          ],
+        },
+        "point": {
+          "privileges": [
+            {
+              "id": "1S765HGJAL",
+              "label": "Уровень 1",
+              "sale": {
+                "all": 0.5,
+              },
+              "starts_from": 0,
+            },
+          ],
+        },
+    }
+
     pool = get_connections_pool()
     connection = pool.getconn()
 
@@ -285,5 +333,11 @@ if __name__ == "__main__":
 
     recreate_admins_table(connection)
     recreate_events_table(connection)
+
+    update_active(connection, DiscountType.SALE, False)
+    update_active(connection, DiscountType.POINTS, False)
+
+    update_privilages(connection, default_privialge_settings["percent"]["privileges"], 1)
+    update_privilages(connection, default_privialge_settings["point"]["privileges"], 2)
 
     pool.putconn(connection)

@@ -1,6 +1,9 @@
-from postgress.utils import (
+from postgress.p_utils import (
     to_db_readable_date,
 )
+
+from postgress.enums import DiscountType
+
 from psycopg2 import sql
 
 def find_or_create_user(connection, chat_id):
@@ -24,6 +27,7 @@ def find_or_create_user(connection, chat_id):
 
         created = True
         user_id, chat_id, gender, birth_date = cursor.fetchone()
+        update_user_to_discount(connection, user_id)
         return user_id, created
     except Exception as error:
         print("Error in find_or_create_user: ", error)
@@ -298,9 +302,9 @@ def get_purchase_counts_by_gender(connection):
         results = cursor.fetchall()
 
         for gender, count in results:
-            if gender == 'man':
+            if gender == 'мужской':
                 purchase_counts[0] = count
-            elif gender == 'women':
+            elif gender == 'женский':
                 purchase_counts[1] = count
             else:
                 purchase_counts[2] = count
@@ -622,12 +626,13 @@ def update_privilages(connection, privilages, discount_type_id):
         print(privilages_dict)
 
         for priv_id, priv in privilages_dict.items():
+            money_threashold = priv.get('starts_from') * 100
             if priv_id in existing_discounts:
                 cursor.execute("""
                     UPDATE discount
                     SET name = %s, value = %s, money_threshold = %s
                     WHERE id = %s AND type_id = %s
-                """, (priv.get('label'), priv.get('sale').get('all'), priv.get('starts_from'), priv_id, discount_type_id))
+                """, (priv.get('label'), priv.get('sale').get('all'), money_threashold, priv_id, discount_type_id))
             else:
                 print("New:")
                 print(priv_id)
@@ -636,7 +641,7 @@ def update_privilages(connection, privilages, discount_type_id):
                 cursor.execute("""
                     INSERT INTO discount (type_id, name, value, money_threshold)
                     VALUES (%s, %s, %s, %s)
-                """, (discount_type_id, priv.get('label'), priv.get('sale').get('all'), priv.get('starts_from')))
+                """, (discount_type_id, priv.get('label'), priv.get('sale').get('all'), money_threashold))
 
         print()
         print(discount_type_id)
@@ -661,17 +666,18 @@ def update_privilages(connection, privilages, discount_type_id):
         connection.commit()
 
 
-def get_privilages(connection, discount_type_id):
+def get_privilages(connection, discount_type_name):
     try:
         cursor = connection.cursor()
         
         query = """
         SELECT d.id, d.name, d.value, d.money_threshold
         FROM discount d
-        WHERE d.type_id = %s
+        JOIN discount_type dt ON d.type_id = dt.id
+        WHERE dt.name = %s
         """
         
-        cursor.execute(query, (discount_type_id,))
+        cursor.execute(query, (discount_type_name,))
         rows = cursor.fetchall()
 
         print(rows)
@@ -684,7 +690,7 @@ def get_privilages(connection, discount_type_id):
                 "sale": {
                     "all": row[2], 
                 },
-                "starts_from": row[3],  
+                "starts_from": row[3] / 100,  
             }
             privileges.append(privilege)
         
@@ -700,11 +706,13 @@ def get_privilages(connection, discount_type_id):
         connection.commit()
 
 
-def update_user_to_discount(connection):
+def update_user_to_discount(connection, target_user_id = None):
     try:
         cursor = connection.cursor()
 
-        cursor.execute("DELETE FROM user_to_discount;")
+        partial_delete = (" WHERE user_id = " + str(target_user_id) ,"")[target_user_id == None]
+
+        cursor.execute("DELETE FROM user_to_discount" + partial_delete + ";")
 
         cursor.execute("SELECT id FROM users;")
         users = cursor.fetchall()
@@ -712,8 +720,11 @@ def update_user_to_discount(connection):
         for user in users:
             user_id = user[0]
 
+            if (target_user_id != None and target_user_id != user_id):
+                continue
+
             cursor.execute("""
-                SELECT SUM(p.price_kopeck * pi.quantity) 
+                SELECT SUM(p.price_copeck * pi.quantity) 
                 FROM purchase pu
                 JOIN purchase_info pi ON pu.id = pi.purchase_id
                 JOIN products p ON pi.product_id = p.id
@@ -724,20 +735,32 @@ def update_user_to_discount(connection):
             query = """
                 SELECT d.id 
                 FROM discount d
-                JOIN discount_type dt ON d.type_id = %s
-                WHERE d.money_threshold < %s
+                JOIN discount_type dt ON d.type_id = dt.id
+                WHERE d.money_threshold <= %s AND dt.name = %s
                 ORDER BY d.money_threshold DESC
                 LIMIT 1;
             """
 
-            cursor.execute(query, (1, total_sum, ))
-            cursor.execute(query, (2, total_sum, ))
-
+            cursor.execute(query, (total_sum, DiscountType.SALE.value, ))
             discount = cursor.fetchone()
+
+            print(discount)
             if discount:
                 discount_id = discount[0]
                 cursor.execute("""
-                    INSERT INTO "User  to disount" (user_id, discount_id) 
+                    INSERT INTO user_to_discount (user_id, discount_id) 
+                    VALUES (%s, %s);
+                """, (user_id, discount_id))
+
+            
+            cursor.execute(query, (total_sum, DiscountType.POINTS.value, ))
+
+            discount = cursor.fetchone()
+            print(discount)
+            if discount:
+                discount_id = discount[0]
+                cursor.execute("""
+                    INSERT INTO user_to_discount (user_id, discount_id) 
                     VALUES (%s, %s);
                 """, (user_id, discount_id))
 
@@ -823,9 +846,16 @@ def get_loyalty_level(connection, user_id):
                 dt.is_enabled = TRUE;
         """
 
+        test_q = """
+            SELECT * FROM users
+        """
+
         cursor.execute(base_query, [user_id])
 
         result = [(type_name, name, value, threshold) for type_name, name, value, threshold in cursor.fetchall()]
+        
+        cursor.execute(test_q)
+        print(cursor.fetchall())
 
         return result
     except Exception as error:

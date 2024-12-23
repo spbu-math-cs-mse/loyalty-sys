@@ -6,5 +6,5 @@ class Gender(Enum):
     UNDEFINED = "не указано"
 
 class DiscountType(Enum):
-    POINTS = "points"
     SALE = "sale"
+    POINTS = "points"
