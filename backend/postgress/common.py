@@ -305,11 +305,11 @@ def get_purchase_counts_by_gender(connection):
 
         for gender, count in results:
             if gender == 'мужской':
-                purchase_counts[0] = count
+                purchase_counts[0] += count
             elif gender == 'женский':
-                purchase_counts[1] = count
+                purchase_counts[1] += count
             else:
-                purchase_counts[2] = count
+                purchase_counts[2] += count
         return purchase_counts
 
     except Exception as error:
